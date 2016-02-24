@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		B4911E331C7E06DA006BBB10 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = B4911E321C7E06DA006BBB10 /* main.c */; };
+		B4911E3B1C7E0BD5006BBB10 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = B4911E391C7E0BD5006BBB10 /* utils.c */; };
+		B4911E3D1C7E0CB1006BBB10 /* lsscp.c in Sources */ = {isa = PBXBuildFile; fileRef = B4911E3C1C7E0CB1006BBB10 /* lsscp.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +27,10 @@
 /* Begin PBXFileReference section */
 		B4911E2F1C7E06DA006BBB10 /* HO-Project1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "HO-Project1"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4911E321C7E06DA006BBB10 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		B4911E391C7E0BD5006BBB10 /* utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
+		B4911E3C1C7E0CB1006BBB10 /* lsscp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lsscp.c; sourceTree = "<group>"; };
+		B4911E3E1C7E1532006BBB10 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
+		B4911E3F1C7E15B2006BBB10 /* lsscp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lsscp.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +64,10 @@
 			isa = PBXGroup;
 			children = (
 				B4911E321C7E06DA006BBB10 /* main.c */,
+				B4911E391C7E0BD5006BBB10 /* utils.c */,
+				B4911E3E1C7E1532006BBB10 /* utils.h */,
+				B4911E3C1C7E0CB1006BBB10 /* lsscp.c */,
+				B4911E3F1C7E15B2006BBB10 /* lsscp.h */,
 			);
 			path = "HO-Project1";
 			sourceTree = "<group>";
@@ -118,7 +128,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B4911E3D1C7E0CB1006BBB10 /* lsscp.c in Sources */,
 				B4911E331C7E06DA006BBB10 /* main.c in Sources */,
+				B4911E3B1C7E0BD5006BBB10 /* utils.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -147,7 +159,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -190,7 +202,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -228,7 +240,7 @@
 				B4911E351C7E06DA006BBB10 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		B4911E361C7E06DA006BBB10 /* Build configuration list for PBXNativeTarget "HO-Project1" */ = {
 			isa = XCConfigurationList;
@@ -237,6 +249,7 @@
 				B4911E381C7E06DA006BBB10 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};

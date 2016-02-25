@@ -31,6 +31,7 @@
 		B4911E3C1C7E0CB1006BBB10 /* lsscp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lsscp.c; sourceTree = "<group>"; };
 		B4911E3E1C7E1532006BBB10 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
 		B4911E3F1C7E15B2006BBB10 /* lsscp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lsscp.h; sourceTree = "<group>"; };
+		B4A04C611C7F5B9F00878DBB /* SCP-Instances */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "SCP-Instances"; path = "../../SCP-Instances"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +64,7 @@
 		B4911E311C7E06DA006BBB10 /* HO-Project1 */ = {
 			isa = PBXGroup;
 			children = (
+				B4A04C611C7F5B9F00878DBB /* SCP-Instances */,
 				B4911E321C7E06DA006BBB10 /* main.c */,
 				B4911E391C7E0BD5006BBB10 /* utils.c */,
 				B4911E3E1C7E1532006BBB10 /* utils.h */,

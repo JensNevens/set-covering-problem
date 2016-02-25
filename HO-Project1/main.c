@@ -11,12 +11,6 @@
 #include "lsscp.h"
 
 int main(int argc, char *argv[]) {
-    /* read_parameters(argc, argv);
-    srand(seed);
-    read_scp(scp_file);
-    print_instance(0);
-    finalize();
-    return EXIT_SUCCESS; */
-    usage();
+    main_loop(argc, argv);
     return 1;
 }

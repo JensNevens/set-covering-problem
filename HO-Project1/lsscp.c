@@ -21,7 +21,7 @@
 #include "utils.h"
 
 /** Algorithm parameters **/
-int seed = 1234567;
+int seed = 6666666;
 char *scp_file = "";
 char *output_file = "output.txt";
 
@@ -40,7 +40,6 @@ int *cost;        /* cost[i] contains cost of column i  */
 /** Solution variables **/
 int *x;           /* x[i] 0,1 if column i is selected */
 int *y;           /* y[i] 0,1 if row i covered by the actual solution */
-/** Note: Use incremental updates for the solution **/
 int fx;           /* sum of the cost of the columns selected in the solution (can be partial) */
 
 /** Dynamic variables **/
@@ -48,8 +47,10 @@ int fx;           /* sum of the cost of the columns selected in the solution (ca
 /** these are just examples of useful variables. **/
 /** These variables need to be updated eveytime a column is added to a partial solution **/
 /** or when a complete solution is modified */
-int *col_cover;   /* col_colver[i] contains selected columns that cover row i */
-int ncol_cover;   /* number of selected columns that cover row i */
+int **col_cover;  /* col_colver[i] contains selected columns that cover row i */
+int *ncol_cover;  /* ncol_cover[i] contains number of selected columns that cover row i */
+int un_rows;      /* the amount of un-covered rows */
+int un_cols;      /* the amoung of un-used columns */
 
 void usage() {
     printf("\nUSAGE: lsscp [param_name, param_value] [options]...\n");
@@ -190,7 +191,7 @@ void read_scp(char *filename) {
     free((void *)k);
 }
 
-/*** Use level>=1 to print more info (check the correct reading) */
+/*** Use level>=1 to print more info */
 void print_instance(int level) {
     int i;
     
@@ -215,7 +216,26 @@ void print_instance(int level) {
 }
 
 /*** Use this function to initialize other variables of the algorithms **/
-//void initialize(){}
+void initialize() {
+    un_rows = m;
+    un_cols = n;
+    x = (int *) mymalloc(n * sizeof(int));
+    y = (int *) mymalloc(m * sizeof(int));
+    col_cover = (int **) mymalloc(m * sizeof(int *));
+    ncol_cover = (int *) mymalloc(m * sizeof(int));
+    for (int i = 0; i < n; i++) {
+        x[i] = 0;
+    }
+    for (int i = 0; i < m; i++) {
+        y[i] = 0;
+        ncol_cover[i] = 0;
+        int k = ncol[i];
+        col_cover[i] = (int *) mymalloc(k * sizeof(int));
+        for (int j = 0; j < k; j++) {
+            col_cover[i][j] = 0;
+        }
+    }
+}
 
 /*** Use this function to finalize execution */
 void finalize() {
@@ -224,60 +244,126 @@ void finalize() {
     free((void *) nrow );
     free((void *) ncol );
     free((void *) cost );
+    free((void *) x);
+    free((void *) y);
+    free((void **) col_cover);
+    free((void *) ncol_cover);
+}
+
+void addSet(int colidx) {
+    // TODO: Set colidx is added to partial solution.
+    // Update: x, y, fx, col_cover, ncol_cover, un_rows, un_cols
+}
+
+int redundant(int colidx) {
+    // TODO: Check if set colidx is redundant.
+    return 1;
 }
 
 /*** Constructive algorithms */
-void random_construction() {
-    printf("Random");
+/*** Random Construction: */
+/***    1. Pick an un-covered element */
+/***    2. Choose a random set that covers this element */
+float randomFloat() {
+    float r = (float) rand() / (float) RAND_MAX;
+    return r;
 }
 
-void static_cost() {
+/*** To pick an un-covered element, make intervals of size 1/#elements, */
+/*** generate a random number in [0,1] and search for the n'th interval */
+/*** in which this random number lies. */
+int pickRandom(int setSize) {
+    float r = randomFloat();
+    float step = (float) 1 / (float) setSize;
+    int set;
+    for (int i = 0; i < setSize; i++) {
+        if (r > i*step && r <= (i+1)*step) {
+            set = i;
+            break;
+        }
+    }
+    return set;
+}
+
+void randomConstruction() {
+    // Select an element (using pickRandom)
+    // Check if element is un-covered (using y)
+    // If false, retry
+    int found = 0;
+    int rowidx = 0, colidx = 0;
+    
+    while (!found) {
+        int idx = pickRandom(un_rows);
+        if (!y[idx]) {
+            rowidx = idx;
+            found = 1;
+        }
+    }
+    // If true, select a set that covers this element (using pickRandom)
+    // Check if set us un-used (using x)
+    // If false, retry
+    found = 0;
+    while (!found) {
+        int idx = pickRandom(ncol[rowidx]);
+        if (!x[col[rowidx][idx]]) {
+            colidx = col[rowidx][idx];
+            found = 1;
+        }
+    }
+    // TODO: If true, add this set to partial solution
+    // Keep track of all redudant sets?? Maybe too difficult..
+    if (!redundant(colidx)) {
+        addSet(colidx);
+    }
+}
+
+void staticCost() {
     printf("Static");
 }
 
-void static_cover_cost() {
+void staticCoverCost() {
     printf("Static Cover");
 }
 
-void adaptive_cover_cost() {
+void adaptiveCoverCost() {
     printf("Adaptive Cover");
 }
 
 /*** Dispatcher for constructive algorithms */
 void constructive() {
     if (ch1) {
-        random_construction();
+        randomConstruction();
     } else if (ch2) {
-        static_cost();
+        staticCost();
     } else if (ch3) {
-        static_cover_cost();
+        staticCoverCost();
     } else if (ch4) {
-        adaptive_cover_cost();
+        adaptiveCoverCost();
     } else {
         printf("ERROR: No constructive algorithm selected.\n");
     }
 }
 
 /** Iterative algorithms */
-void best_improvement() {}
-void first_improvement() {}
+void bestImprovement() {}
+void firstImprovement() {}
 
 /*** Dispatcher for iterative algorithms */
 void iterative() {
     if (bi) {
-        best_improvement();
+        bestImprovement();
     } else if (fi) {
-        first_improvement();
+        firstImprovement();
     }
 }
 
 /*** Main loop */
 void main_loop(int argc, char *argv[]) {
     read_parameters(argc, argv);
-    srand(seed);
     read_scp(scp_file);
     print_instance(0);
-    constructive();
+    initialize();
+    srand(seed);
     finalize();
 }
 

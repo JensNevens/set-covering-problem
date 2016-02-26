@@ -13,8 +13,12 @@ void usage();
 void read_parameters(int argc, char *argv[]);
 void read_scp(char *filename);
 void print_instance(int level);
+void initialize();
 void finalize();
 void main_loop(int argc, char *argv[]);
+
+float randomFloat();
+int pickRandom(int setSize);
 
 void constructuve();
 void random_construction();

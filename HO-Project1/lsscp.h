@@ -9,6 +9,7 @@
 #ifndef lsscp_h
 #define lsscp_h
 
+// General functions
 void usage();
 void read_parameters(int argc, char *argv[]);
 void read_scp(char *filename);
@@ -17,17 +18,18 @@ void initialize();
 void finalize();
 void main_loop(int argc, char *argv[]);
 
+// Functions needed by all algorithms
+void addSet(int colidx);
+void removeSet(int colidx);
+int redundant(int colidx);
+void eliminate();
+int isSolution();
+void testSolution();
+void constructive();
+
+// Random Construction
 float randomFloat();
 int pickRandom(int setSize);
-
-void constructuve();
-void random_construction();
-void static_cost();
-void static_cover_cost();
-void adaptive_cover_cost();
-
-void iterative();
-void best_improvement();
-void first_improvement();
+void RandomConstruction();
 
 #endif /* lsscp_h */

@@ -19,8 +19,9 @@
 #include <string.h>
 
 #include "utils.h"
+#include "lsscp.h"
 
-/** Algorithm parameters **/
+/*** Algorithm parameters **/
 int seed = 6666666;
 char *scp_file = "";
 char *output_file = "output.txt";
@@ -40,6 +41,7 @@ int *cost;        /* cost[i] contains cost of column i  */
 /** Solution variables **/
 int *x;           /* x[i] 0,1 if column i is selected */
 int *y;           /* y[i] 0,1 if row i covered by the actual solution */
+int *r;           /* r[i] 0,1 if column i is redundant */
 int fx;           /* sum of the cost of the columns selected in the solution (can be partial) */
 
 /** Dynamic variables **/
@@ -70,7 +72,7 @@ void usage() {
 }
 
 
-/*Read parameters from command line*/
+/*** Read parameters from command line*/
 void read_parameters(int argc, char *argv[]) {
     int i;
     if (argc <= 1) {
@@ -221,6 +223,7 @@ void initialize() {
     un_cols = n;
     x = (int *) mymalloc(n * sizeof(int));
     y = (int *) mymalloc(m * sizeof(int));
+    r = (int *) mymalloc(n * sizeof(int));
     col_cover = (int **) mymalloc(m * sizeof(int *));
     ncol_cover = (int *) mymalloc(m * sizeof(int));
     for (int i = 0; i < n; i++) {
@@ -250,34 +253,158 @@ void finalize() {
     free((void *) ncol_cover);
 }
 
+/*** When adding a set with colidx to the partial solution:
+ 1. Indicate that column is selected (x)
+ 2. Add cost of column to partial cost (fx)
+ 3. Decrement # of un-used columns (un_cols)
+ 4. Indicate that each row covered by column is selected (y)
+ 5. Increment # of columns covering each row (ncol_cover)
+ 6. Decrement # of un-covered rows (un_rows)
+ 7. Add column to all columns covering row i (col_cover) */
 void addSet(int colidx) {
-    // TODO: Set colidx is added to partial solution.
-    // Update: x, y, fx, col_cover, ncol_cover, un_rows, un_cols
+    x[colidx] = 1;
+    fx += cost[colidx]; //This shall need to be replaced with getCost(colidx).
+    un_cols -= 1;
+    for (int i = 0; i < nrow[colidx]; i++) {
+        int rowidx = row[colidx][i];
+        if (!y[rowidx]) {
+            un_rows -= 1;
+            y[rowidx] = 1;
+        }
+        ncol_cover[rowidx] += 1;
+        for (int j = 0; j < ncol[rowidx]; j++) {
+            if (!col_cover[rowidx][j]) {
+                col_cover[rowidx][j] = colidx;
+                break;
+            }
+        }
+    }
 }
 
+/*** When removing a set from the partial solution
+ 1. Indicate that the column is no longer selected (x)
+ 2. Remove cost of column from partial cost (fx)
+ 3. Increment # of un-used columns (un_cols)
+ 4. Decrement # of columns covering each row (ncol_cover)
+ 5. Remove column from all columns covering row i (col_cover)
+*/
+void removeSet(int colidx) {
+    x[colidx] = 0;
+    fx -= cost[colidx];
+    un_cols -= 1;
+    for (int i = 0; i < nrow[colidx]; i++) {
+        int rowidx = row[colidx][i];
+        ncol_cover[rowidx] -= 1;
+        // TODO: Remove from col_cover list and shift remaining cols
+    }
+}
+
+/*** Check if set colidx is redundant.
+ Assume set is redundant. When one element is found
+ that is not yet covered, the set is not redundant. */
 int redundant(int colidx) {
-    // TODO: Check if set colidx is redundant.
-    return 1;
+    int redundantBool = 1;
+    for (int i = 0; i < nrow[colidx]; i++) {
+        if (!y[row[colidx][i]]) {
+            redundantBool = 0;
+            break;
+        }
+    }
+    return redundantBool;
 }
 
-/*** Constructive algorithms */
-/*** Random Construction: */
-/***    1. Pick an un-covered element */
-/***    2. Choose a random set that covers this element */
+void eliminate() {
+    int removed = 1;
+    int currCol = 0, currCost = 0;
+    int redundantBool = 1;
+    
+    while (removed) { //Continue looping until you can no longer find a redundant set
+        removed = 0;
+        currCol = 0;
+        currCost = 0;
+        for (int i = 0; i < n; i++) {
+            if (x[i]) { //Consider only a set when it is selected
+                redundantBool = 1; //A set is redundant until proven otherwise
+                for (int j = 0; j < m; j++) {
+                    for (int k = 0; k < ncol_cover[j]; k++) {
+                        //Double for-loop = look for each element at all sets covering that element
+                        //If set I covers element J and it is the only one
+                        //Then set I is no longer redundant
+                        if (col_cover[j][k] == i && ncol_cover[j] == 1) {
+                            redundantBool = 0;
+                            break; //Breaks out of loop K
+                        }
+                    }
+                    if (!redundantBool) {
+                        break; //Breaks out of loop J
+                    }
+                }
+                //If you managed to go through all elements J and
+                //the set I is still redundant; store its idx and cost
+                //but only if the cost of this redundant set is
+                //higher than the already found redundant set (if present)
+                if (redundantBool) {
+                    if (currCol == 0) {
+                        currCol = i;
+                        currCost = cost[i];
+                    } else if (cost[i] > currCost) {
+                        currCol = i;
+                        currCost = cost[i];
+                    } else if (cost[i] == currCost) {
+                        if (nrow[i] > nrow[currCol]) {
+                            currCol = i;
+                            currCost = cost[i];
+                        }
+                    }
+                }
+            }
+        }
+        //If a redundant set with highest cost is found
+        //remove it and repeat the process
+        if (currCol != 0) {
+            removeSet(currCol);
+            removed = 1;
+        }
+    }
+}
+
+/*** Check if the current solution is a solution.
+ i.e. when no rows are un-covered. */
+int isSolution() {
+    return (un_rows <= 0);
+}
+
+/*** Prints diagnostic information about the solution */
+void testSolution() {
+    for (int i = 0; i < m; i++) {
+        if (y[i]) {
+            printf("ELEMENT %d COVERED", i);
+            printf(" BY %d SETS\n", ncol_cover[i]);
+        } else {
+            printf("ELEMENT %d NOT COVERED\n", i);
+        }
+    }
+    printf("COST: %d\n", fx);
+}
+
+/*** Constructive algorithms
+ Random Construction:
+  1. Pick an un-covered element
+  2. Choose a random set that covers this element */
 float randomFloat() {
     float r = (float) rand() / (float) RAND_MAX;
     return r;
 }
 
-/*** To pick an un-covered element, make intervals of size 1/#elements, */
-/*** generate a random number in [0,1] and search for the n'th interval */
-/*** in which this random number lies. */
+/*** To pick an un-covered element, make intervals of size 1/#elements,
+ generate a random number in [0,1] and search for the n'th interval
+ in which this random number lies. */
 int pickRandom(int setSize) {
     float r = randomFloat();
     float step = (float) 1 / (float) setSize;
     int set;
     for (int i = 0; i < setSize; i++) {
-        if (r > i*step && r <= (i+1)*step) {
+        if (r <= (i+1)*step) {
             set = i;
             break;
         }
@@ -285,35 +412,41 @@ int pickRandom(int setSize) {
     return set;
 }
 
+/*** Select an element (using pickRandom)
+    Check if element is un-covered (using y)
+    If false, retry
+    If true, select a set that covers this element (using pickRandom)
+       Check if set us un-used (using x)
+       If false, retry
+       If true, check if this set is redundant
+           If true, retry
+           If false, add set to partial solution
+ End */
 void randomConstruction() {
-    // Select an element (using pickRandom)
-    // Check if element is un-covered (using y)
-    // If false, retry
-    int found = 0;
+    int innerBool = 0, outerBool = 0;
     int rowidx = 0, colidx = 0;
     
-    while (!found) {
-        int idx = pickRandom(un_rows);
-        if (!y[idx]) {
-            rowidx = idx;
-            found = 1;
+    while (!outerBool) {
+        while (!innerBool) {
+            int idx = pickRandom(m);
+            if (!y[idx]) {
+                rowidx = idx;
+                innerBool = 1;
+            }
         }
-    }
-    // If true, select a set that covers this element (using pickRandom)
-    // Check if set us un-used (using x)
-    // If false, retry
-    found = 0;
-    while (!found) {
-        int idx = pickRandom(ncol[rowidx]);
-        if (!x[col[rowidx][idx]]) {
-            colidx = col[rowidx][idx];
-            found = 1;
+        innerBool = 0;
+        while (!innerBool) {
+            int idx = pickRandom(ncol[rowidx]);
+            if (!x[col[rowidx][idx]]) {
+                colidx = col[rowidx][idx];
+                innerBool = 1;
+            }
         }
-    }
-    // TODO: If true, add this set to partial solution
-    // Keep track of all redudant sets?? Maybe too difficult..
-    if (!redundant(colidx)) {
-        addSet(colidx);
+        innerBool = 0;
+        if (!redundant(colidx)) {
+            addSet(colidx);
+            outerBool = 1;
+        }
     }
 }
 
@@ -331,16 +464,18 @@ void adaptiveCoverCost() {
 
 /*** Dispatcher for constructive algorithms */
 void constructive() {
-    if (ch1) {
-        randomConstruction();
-    } else if (ch2) {
-        staticCost();
-    } else if (ch3) {
-        staticCoverCost();
-    } else if (ch4) {
-        adaptiveCoverCost();
-    } else {
-        printf("ERROR: No constructive algorithm selected.\n");
+    while (!isSolution()) {
+        if (ch1) {
+            randomConstruction();
+        } else if (ch2) {
+            staticCost();
+        } else if (ch3) {
+            staticCoverCost();
+        } else if (ch4) {
+            adaptiveCoverCost();
+        } else {
+            printf("ERROR: No constructive algorithm selected.\n");
+        }
     }
 }
 
@@ -364,6 +499,8 @@ void main_loop(int argc, char *argv[]) {
     print_instance(0);
     initialize();
     srand(seed);
+    constructive();
+    testSolution();
     finalize();
 }
 

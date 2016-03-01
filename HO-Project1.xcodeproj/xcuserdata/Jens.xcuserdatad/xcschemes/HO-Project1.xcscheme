@@ -64,7 +64,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--seed 1234567"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--instance /Users/Jens/Documents/Jens/School/1MA/Heuristic\ Optimization/Assignments/Assignment1/SCP-Instances/scp42.txt"
@@ -100,7 +100,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--re"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>

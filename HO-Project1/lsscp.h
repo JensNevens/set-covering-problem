@@ -20,11 +20,12 @@ void main_loop(int argc, char *argv[]);
 
 // Functions needed by all algorithms
 void addSet(int colidx);
+void shiftColCover(int rowidx, int from);
 void removeSet(int colidx);
 int redundant(int colidx);
 void eliminate();
 int isSolution();
-void testSolution();
+void diagnostics();
 void constructive();
 
 // Random Construction

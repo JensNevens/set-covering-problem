@@ -281,6 +281,26 @@ void addSet(int colidx) {
     }
 }
 
+/***
+ When an element is removed from col_cover for row rowidx,
+ then the remaining elements need to be shifted, so there
+ are no zeros in between.
+*/
+void shiftColCover(int rowidx, int start) {
+    for (int i = start; i < ncol_cover[rowidx]; i++) {
+        if (i+1 < ncol_cover[rowidx]) {
+            if (col_cover[rowidx][i+1]) {
+                col_cover[rowidx][i] = col_cover[rowidx][i+1];
+            } else {
+                col_cover[rowidx][i] = 0;
+                break;
+            }
+        } else {
+            col_cover[rowidx][i] = 0;
+        }
+    }
+}
+
 /*** When removing a set from the partial solution
  1. Indicate that the column is no longer selected (x)
  2. Remove cost of column from partial cost (fx)
@@ -291,11 +311,17 @@ void addSet(int colidx) {
 void removeSet(int colidx) {
     x[colidx] = 0;
     fx -= cost[colidx];
-    un_cols -= 1;
+    un_cols += 1;
     for (int i = 0; i < nrow[colidx]; i++) {
         int rowidx = row[colidx][i];
+        for (int j = 0; j < ncol_cover[rowidx]; j++) {
+            if (col_cover[rowidx][j] == colidx) {
+                col_cover[rowidx][j] = 0;
+                shiftColCover(rowidx, j);
+                break;
+            }
+        }
         ncol_cover[rowidx] -= 1;
-        // TODO: Remove from col_cover list and shift remaining cols
     }
 }
 
@@ -330,7 +356,7 @@ void eliminate() {
                         //Double for-loop = look for each element at all sets covering that element
                         //If set I covers element J and it is the only one
                         //Then set I is no longer redundant
-                        if (col_cover[j][k] == i && ncol_cover[j] == 1) {
+                        if (col_cover[j][k] == i && ncol_cover[j] <= 1) {
                             redundantBool = 0;
                             break; //Breaks out of loop K
                         }
@@ -375,11 +401,18 @@ int isSolution() {
 }
 
 /*** Prints diagnostic information about the solution */
-void testSolution() {
+void diagnostics() {
     for (int i = 0; i < m; i++) {
         if (y[i]) {
-            printf("ELEMENT %d COVERED", i);
-            printf(" BY %d SETS\n", ncol_cover[i]);
+            printf("ELEMENT %d COVERED BY %d SET(S)\n", i, ncol_cover[i]);
+            for (int j = 0; j < ncol_cover[i]; j++) {
+                if (!col_cover[i][j]) {
+                    printf("---\n");
+                    break;
+                } else {
+                    printf("---SET %d\n", col_cover[i][j]);
+                }
+            }
         } else {
             printf("ELEMENT %d NOT COVERED\n", i);
         }
@@ -477,6 +510,9 @@ void constructive() {
             printf("ERROR: No constructive algorithm selected.\n");
         }
     }
+    if (re) {
+        eliminate();
+    }
 }
 
 /** Iterative algorithms */
@@ -492,6 +528,8 @@ void iterative() {
     }
 }
 
+// TODO: Find error in Redundancy Elimination.
+
 /*** Main loop */
 void main_loop(int argc, char *argv[]) {
     read_parameters(argc, argv);
@@ -500,7 +538,7 @@ void main_loop(int argc, char *argv[]) {
     initialize();
     srand(seed);
     constructive();
-    testSolution();
+    diagnostics();
     finalize();
 }
 

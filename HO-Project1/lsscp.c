@@ -37,12 +37,12 @@ int **col;        /* col[i] contains columns that cover row i */
 int *ncol;        /* ncol[i] contains number of columns that cover row i */
 int *nrow;        /* nrow[i] contains number of rows that are covered by column i */
 int *cost;        /* cost[i] contains cost of column i  */
+float *ccost;     /* ccost[i] contains static cover cost of column i */
 
 /** Solution variables **/
 int *x;           /* x[i] 0,1 if column i is selected */
 int *y;           /* y[i] 0,1 if row i covered by the actual solution */
-int *r;           /* r[i] 0,1 if column i is redundant */
-int fx;           /* sum of the cost of the columns selected in the solution (can be partial) */
+int fx;         /* sum of the cost of the columns selected in the solution (can be partial) */
 
 /** Dynamic variables **/
 /** Note: use dynamic variables to make easier the construction and modification of solutions. **/
@@ -190,13 +190,12 @@ void read_scp(char *filename) {
             k[col[i][h]]++;
         }
     }
-    free((void *)k);
+    free((void *) k);
 }
 
 /*** Use level>=1 to print more info */
 void print_instance(int level) {
     int i;
-    
     printf("**********************************************\n");
     printf("  SCP INSTANCE: %s\n", scp_file);
     printf("  PROBLEM SIZE\t m = %d\t n = %d\n", m, n);
@@ -223,11 +222,12 @@ void initialize() {
     un_cols = n;
     x = (int *) mymalloc(n * sizeof(int));
     y = (int *) mymalloc(m * sizeof(int));
-    r = (int *) mymalloc(n * sizeof(int));
     col_cover = (int **) mymalloc(m * sizeof(int *));
     ncol_cover = (int *) mymalloc(m * sizeof(int));
+    ccost = (float *) mymalloc(n * sizeof(float));
     for (int i = 0; i < n; i++) {
         x[i] = 0;
+        ccost[i] = (float) cost[i] / (float) nrow[i];
     }
     for (int i = 0; i < m; i++) {
         y[i] = 0;
@@ -235,23 +235,28 @@ void initialize() {
         int k = ncol[i];
         col_cover[i] = (int *) mymalloc(k * sizeof(int));
         for (int j = 0; j < k; j++) {
-            col_cover[i][j] = 0;
+            col_cover[i][j] = -1;
         }
     }
 }
 
 /*** Use this function to finalize execution */
 void finalize() {
-    free((void **) row );
-    free((void **) col );
-    free((void *) nrow );
-    free((void *) ncol );
-    free((void *) cost );
+    free((void **) row);
+    free((void **) col);
+    free((void *) nrow);
+    free((void *) ncol);
+    free((void *) cost);
+    free((void *) ccost);
     free((void *) x);
     free((void *) y);
     free((void **) col_cover);
     free((void *) ncol_cover);
 }
+
+/********************************
+ Functions used by all algorithms
+ ********************************/
 
 /*** When adding a set with colidx to the partial solution:
  1. Indicate that column is selected (x)
@@ -263,7 +268,7 @@ void finalize() {
  7. Add column to all columns covering row i (col_cover) */
 void addSet(int colidx) {
     x[colidx] = 1;
-    fx += cost[colidx]; //This shall need to be replaced with getCost(colidx).
+    fx += cost[colidx];
     un_cols -= 1;
     for (int i = 0; i < nrow[colidx]; i++) {
         int rowidx = row[colidx][i];
@@ -273,7 +278,7 @@ void addSet(int colidx) {
         }
         ncol_cover[rowidx] += 1;
         for (int j = 0; j < ncol[rowidx]; j++) {
-            if (!col_cover[rowidx][j]) {
+            if (col_cover[rowidx][j] < 0) {
                 col_cover[rowidx][j] = colidx;
                 break;
             }
@@ -281,22 +286,36 @@ void addSet(int colidx) {
     }
 }
 
+/*** Check if set colidx is redundant.
+ Assume set is redundant. When one element is found
+ that is not yet covered, the set is not redundant. */
+int redundant(int colidx) {
+    int redundantBool = 1;
+    for (int i = 0; i < nrow[colidx]; i++) {
+        if (!y[row[colidx][i]]) {
+            redundantBool = 0;
+            break;
+        }
+    }
+    return redundantBool;
+}
+
 /***
  When an element is removed from col_cover for row rowidx,
  then the remaining elements need to be shifted, so there
  are no zeros in between.
 */
-void shiftColCover(int rowidx, int start) {
+void shift(int rowidx, int start) {
     for (int i = start; i < ncol_cover[rowidx]; i++) {
         if (i+1 < ncol_cover[rowidx]) {
-            if (col_cover[rowidx][i+1]) {
+            if (col_cover[rowidx][i+1] >= 0) {
                 col_cover[rowidx][i] = col_cover[rowidx][i+1];
             } else {
-                col_cover[rowidx][i] = 0;
+                col_cover[rowidx][i] = -1;
                 break;
             }
         } else {
-            col_cover[rowidx][i] = 0;
+            col_cover[rowidx][i] = -1;
         }
     }
 }
@@ -316,8 +335,8 @@ void removeSet(int colidx) {
         int rowidx = row[colidx][i];
         for (int j = 0; j < ncol_cover[rowidx]; j++) {
             if (col_cover[rowidx][j] == colidx) {
-                col_cover[rowidx][j] = 0;
-                shiftColCover(rowidx, j);
+                col_cover[rowidx][j] = -1;
+                shift(rowidx, j);
                 break;
             }
         }
@@ -325,69 +344,58 @@ void removeSet(int colidx) {
     }
 }
 
-/*** Check if set colidx is redundant.
- Assume set is redundant. When one element is found
- that is not yet covered, the set is not redundant. */
-int redundant(int colidx) {
-    int redundantBool = 1;
-    for (int i = 0; i < nrow[colidx]; i++) {
-        if (!y[row[colidx][i]]) {
-            redundantBool = 0;
-            break;
-        }
-    }
-    return redundantBool;
-}
-
+/***
+ Continue looping until you can no longer find a redundant set.
+ Consider only a set when it is selected.
+ A set is redundant until proven otherwise.
+ Double for-loop = look for each element at all sets covering that element
+ If set I covers element J and it is the only one
+ Then set I is no longer redundant
+ If you managed to go through all elements J and
+ the set I is still redundant; store its idx and cost
+ but only if the cost of this redundant set is
+ higher than the already found redundant set (if present)
+ If a redundant set with highest cost is found
+ remove it and repeat the process
+*/
 void eliminate() {
     int removed = 1;
-    int currCol = 0, currCost = 0;
+    int currCol = 0;
+    float currCost = 0.0;
     int redundantBool = 1;
-    
-    while (removed) { //Continue looping until you can no longer find a redundant set
+    while (removed) {
         removed = 0;
         currCol = 0;
         currCost = 0;
         for (int i = 0; i < n; i++) {
-            if (x[i]) { //Consider only a set when it is selected
-                redundantBool = 1; //A set is redundant until proven otherwise
+            if (x[i]) {
+                redundantBool = 1;
                 for (int j = 0; j < m; j++) {
                     for (int k = 0; k < ncol_cover[j]; k++) {
-                        //Double for-loop = look for each element at all sets covering that element
-                        //If set I covers element J and it is the only one
-                        //Then set I is no longer redundant
                         if (col_cover[j][k] == i && ncol_cover[j] <= 1) {
                             redundantBool = 0;
-                            break; //Breaks out of loop K
+                            break;
                         }
                     }
                     if (!redundantBool) {
-                        break; //Breaks out of loop J
+                        break;
                     }
                 }
-                //If you managed to go through all elements J and
-                //the set I is still redundant; store its idx and cost
-                //but only if the cost of this redundant set is
-                //higher than the already found redundant set (if present)
                 if (redundantBool) {
-                    if (currCol == 0) {
+                    float c = getCost(i);
+                    if (!currCol || c > currCost) {
                         currCol = i;
-                        currCost = cost[i];
-                    } else if (cost[i] > currCost) {
-                        currCol = i;
-                        currCost = cost[i];
-                    } else if (cost[i] == currCost) {
+                        currCost = c;
+                    } else if (c == currCost) {
                         if (nrow[i] > nrow[currCol]) {
                             currCol = i;
-                            currCost = cost[i];
+                            currCost = c;
                         }
                     }
                 }
             }
         }
-        //If a redundant set with highest cost is found
-        //remove it and repeat the process
-        if (currCol != 0) {
+        if (currCol) {
             removeSet(currCol);
             removed = 1;
         }
@@ -406,7 +414,7 @@ void diagnostics() {
         if (y[i]) {
             printf("ELEMENT %d COVERED BY %d SET(S)\n", i, ncol_cover[i]);
             for (int j = 0; j < ncol_cover[i]; j++) {
-                if (!col_cover[i][j]) {
+                if (col_cover[i][j] < 0) {
                     printf("---\n");
                     break;
                 } else {
@@ -417,10 +425,13 @@ void diagnostics() {
             printf("ELEMENT %d NOT COVERED\n", i);
         }
     }
-    printf("COST: %d\n", fx);
 }
 
-/*** Constructive algorithms
+/*************************************
+ Functions used by Random Construction
+ *************************************/
+
+/***
  Random Construction:
   1. Pick an un-covered element
   2. Choose a random set that covers this element */
@@ -456,43 +467,84 @@ int pickRandom(int setSize) {
            If false, add set to partial solution
  End */
 void randomConstruction() {
-    int innerBool = 0, outerBool = 0;
+    int retry = 0;
     int rowidx = 0, colidx = 0;
-    
-    while (!outerBool) {
-        while (!innerBool) {
+    while (!retry) {
+        while (!rowidx) {
             int idx = pickRandom(m);
             if (!y[idx]) {
                 rowidx = idx;
-                innerBool = 1;
             }
         }
-        innerBool = 0;
-        while (!innerBool) {
+        while (!colidx) {
             int idx = pickRandom(ncol[rowidx]);
             if (!x[col[rowidx][idx]]) {
                 colidx = col[rowidx][idx];
-                innerBool = 1;
             }
         }
-        innerBool = 0;
         if (!redundant(colidx)) {
             addSet(colidx);
-            outerBool = 1;
+            retry = 1;
+        } else {
+            rowidx = 0;
+            colidx = 0;
         }
     }
 }
 
-void staticCost() {
-    printf("Static");
+/************************************
+ Functions used by Cost Constructions
+ ************************************/
+
+float adaptiveCost(int colidx) {
+    int covers = 0;
+    for (int i = 0; i < nrow[colidx]; i++) {
+        if (!y[row[colidx][i]]) {
+            covers += 1;
+        }
+    }
+    return (float) cost[colidx] / (float) covers;
 }
 
-void staticCoverCost() {
-    printf("Static Cover");
+float getCost(int colidx) {
+    float c;
+    if (ch1 || ch2) {
+        c = cost[colidx];
+    } else if (ch3) {
+        c = ccost[colidx];
+    } else if (ch4) {
+        c = adaptiveCost(colidx);
+    }
+    return c;
 }
 
-void adaptiveCoverCost() {
-    printf("Adaptive Cover");
+/* 
+ Static cost greedy: select subset with lowest cost and add elements.
+ If 2 subsets have the same cost, select the subset with the most elements in it.
+ If they have the same number of elements, take one at random. */
+void costBased() {
+    int colidx = -1;
+    float currCost = 0.0;
+    for (int i = 0; i < n; i++) {
+        float c = getCost(i);
+        if (!x[i] && !redundant(i)) {
+            if (!currCost || c < currCost) {
+                colidx = i;
+                currCost = c;
+            } else if (c == currCost) {
+                if (nrow[i] > nrow[colidx]) {
+                    colidx = i;
+                    currCost = c;
+                } else if (nrow[i] == nrow[colidx]) {
+                    if (pickRandom(2)) {
+                        colidx = i;
+                        currCost = c;
+                    }
+                }
+            }
+        }
+    }
+    addSet(colidx);
 }
 
 /*** Dispatcher for constructive algorithms */
@@ -500,12 +552,8 @@ void constructive() {
     while (!isSolution()) {
         if (ch1) {
             randomConstruction();
-        } else if (ch2) {
-            staticCost();
-        } else if (ch3) {
-            staticCoverCost();
-        } else if (ch4) {
-            adaptiveCoverCost();
+        } else if (ch2 || ch3 || ch4) {
+            costBased();
         } else {
             printf("ERROR: No constructive algorithm selected.\n");
         }
@@ -528,7 +576,6 @@ void iterative() {
     }
 }
 
-// TODO: Find error in Redundancy Elimination.
 
 /*** Main loop */
 void main_loop(int argc, char *argv[]) {
@@ -540,5 +587,6 @@ void main_loop(int argc, char *argv[]) {
     constructive();
     diagnostics();
     finalize();
+    printf("COST: %d\n", fx);
 }
 

@@ -20,7 +20,7 @@ void main_loop(int argc, char *argv[]);
 
 // Functions needed by all algorithms
 void addSet(int colidx);
-void shiftColCover(int rowidx, int from);
+void shift(int rowidx, int from);
 void removeSet(int colidx);
 int redundant(int colidx);
 void eliminate();
@@ -32,5 +32,10 @@ void constructive();
 float randomFloat();
 int pickRandom(int setSize);
 void RandomConstruction();
+
+// Cost Based
+float adaptiveCost(int colidx);
+float getCost(int colidx);
+void costBased();
 
 #endif /* lsscp_h */

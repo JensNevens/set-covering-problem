@@ -22,7 +22,7 @@
 #include "utils.h"
 
 /*** Algorithm parameters **/
-int seed = 6666666;
+int seed = 1234567;
 char *scp_file = "";
 char *output_file = "output.txt";
 
@@ -73,7 +73,7 @@ void usage() {
 
 
 /*** Read parameters from command line*/
-void read_parameters(int argc, char *argv[]) {
+void readParameters(int argc, char *argv[]) {
     int i;
     if (argc <= 1) {
         usage();
@@ -141,7 +141,7 @@ void read_parameters(int argc, char *argv[]) {
 }
 
 /*** Read instance in the OR-LIBRARY format ***/
-void read_scp(char *filename) {
+void readSCP(char *filename) {
     int h,i,j;
     int *k;
     FILE *fp = fopen(filename, "r");
@@ -194,7 +194,7 @@ void read_scp(char *filename) {
 }
 
 /*** Use level>=1 to print more info */
-void print_instance(int level) {
+void printInstance(int level) {
     int i;
     printf("**********************************************\n");
     printf("  SCP INSTANCE: %s\n", scp_file);
@@ -344,6 +344,22 @@ void removeSet(int colidx) {
     }
 }
 
+int isBetter(int newCol, float newCost, int currCol, float currCost) {
+    int result = 0;
+    if (!currCost || newCost < currCost) {
+        result = 1;
+    } else if (newCost == currCost) {
+        if (nrow[newCol] > nrow[currCol]) {
+            result = 1;
+        } else if (nrow[newCol] == nrow[currCol]) {
+            if (pickRandom(2)) {
+                result = 1;
+            }
+        }
+    }
+    return result;
+}
+
 /***
  Continue looping until you can no longer find a redundant set.
  Consider only a set when it is selected.
@@ -360,12 +376,12 @@ void removeSet(int colidx) {
 */
 void eliminate() {
     int removed = 1;
-    int currCol = 0;
+    int currCol = -1;
     float currCost = 0.0;
     int redundantBool = 1;
     while (removed) {
         removed = 0;
-        currCol = 0;
+        currCol = -1;
         currCost = 0;
         for (int i = 0; i < n; i++) {
             if (x[i]) {
@@ -382,20 +398,15 @@ void eliminate() {
                     }
                 }
                 if (redundantBool) {
-                    float c = getCost(i);
-                    if (!currCol || c > currCost) {
+                    float newCost = getCost(i);
+                    if (isBetter(i, newCost, currCol, currCost)) {
                         currCol = i;
-                        currCost = c;
-                    } else if (c == currCost) {
-                        if (nrow[i] > nrow[currCol]) {
-                            currCol = i;
-                            currCost = c; //TODO: isBetter(i,currcol,currCost)
-                        }
+                        currCost = newCost;
                     }
                 }
             }
         }
-        if (currCol) {
+        if (currCol >= 0) {
             removeSet(currCol);
             removed = 1;
         }
@@ -446,14 +457,14 @@ float randomFloat() {
 int pickRandom(int setSize) {
     float r = randomFloat();
     float step = (float) 1 / (float) setSize;
-    int set;
+    int n;
     for (int i = 0; i < setSize; i++) {
         if (r <= (i+1)*step) {
-            set = i;
+            n = i;
             break;
         }
     }
-    return set;
+    return n;
 }
 
 /*** Select an element (using pickRandom)
@@ -514,28 +525,18 @@ float getCost(int colidx) {
  If 2 subsets have the same cost, select the subset with the most elements in it.
  If they have the same number of elements, take one at random. */
 void costBased() {
-    int colidx = -1;
+    int currCol = -1;
     float currCost = 0.0;
     for (int i = 0; i < n; i++) {
-        float c = getCost(i);
         if (!x[i] && !redundant(i)) {
-            if (!currCost || c < currCost) {
-                colidx = i;
+            float c = getCost(i);
+            if (isBetter(i, c, currCol, currCost)) {
+                currCol = i;
                 currCost = c;
-            } else if (c == currCost) {
-                if (nrow[i] > nrow[colidx]) {
-                    colidx = i;
-                    currCost = c;
-                } else if (nrow[i] == nrow[colidx]) {
-                    if (pickRandom(2)) {
-                        colidx = i;
-                        currCost = c; //TODO: rewritten in a function isBetter(i,colidx,currCost)
-                    }
-                }
             }
         }
     }
-    addSet(colidx);
+    addSet(currCol);
 }
 
 /*** Dispatcher for constructive algorithms */
@@ -567,10 +568,10 @@ void firstImprovement() {}
 
 /*** Main loop */
 int main(int argc, char *argv[]) {
-    read_parameters(argc, argv);
-    read_scp(scp_file);
+    readParameters(argc, argv);
+    readSCP(scp_file);
     initialize();
-    //print_instance(0);
+    //printInstance(0);
     srand(seed);
     solve();
     //diagnostics();

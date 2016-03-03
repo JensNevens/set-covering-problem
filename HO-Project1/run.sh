@@ -4,7 +4,13 @@
 # $2 is path of folder with instances
 # $3 is path of folder to save results
 
-seed=1234567
+seed=6666666
+
+#Remove old files
+for f in "$3"/*.txt
+do
+    rm ${f}
+done
 
 #Exercise 1.1
 for a in "ch1" "ch2" "ch3" "ch4"; do
@@ -14,7 +20,7 @@ for a in "ch1" "ch2" "ch3" "ch4"; do
         then
             configuration="$a"
         else
-            configuration="$a-re"
+            configuration="$a+re"
         fi
         for instance in "$2"/*
         do
@@ -39,9 +45,9 @@ done
 #            start=$SECONDS
 #            if [ -z $re ] # if empty string
 #            then
-#                configuration="$a-$imp_algo"
+#                configuration="$a+$imp_algo"
 #            else
-#                configuration="$a-re+$imp_algo"
+#                configuration="$a+re+$imp_algo"
 #            fi
 #            for instance in "$2"/*
 #            do

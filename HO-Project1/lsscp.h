@@ -11,9 +11,9 @@
 
 // General functions
 void usage();
-void read_parameters(int argc, char *argv[]);
-void read_scp(char *filename);
-void print_instance(int level);
+void readParameters(int argc, char *argv[]);
+void readSCP(char *filename);
+void printInstance(int level);
 void initialize();
 void finalize();
 int main(int argc, char *argv[]);
@@ -24,10 +24,10 @@ void addSet(int colidx);
 void shift(int rowidx, int from);
 void removeSet(int colidx);
 int redundant(int colidx);
+int isBetter(int newCol, float newCost, int currCol, float currCost);
 void eliminate();
 int isSolution();
 void diagnostics();
-
 
 // Random Construction
 float randomFloat();

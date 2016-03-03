@@ -16,7 +16,8 @@ void read_scp(char *filename);
 void print_instance(int level);
 void initialize();
 void finalize();
-void main_loop(int argc, char *argv[]);
+int main(int argc, char *argv[]);
+void solve();
 
 // Functions needed by all algorithms
 void addSet(int colidx);
@@ -26,7 +27,7 @@ int redundant(int colidx);
 void eliminate();
 int isSolution();
 void diagnostics();
-void constructive();
+
 
 // Random Construction
 float randomFloat();
@@ -37,5 +38,10 @@ void RandomConstruction();
 float adaptiveCost(int colidx);
 float getCost(int colidx);
 void costBased();
+
+// Iterative Improvement
+void bestImprovement();
+void firstImprovement();
+void iterative();
 
 #endif /* lsscp_h */

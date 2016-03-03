@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B4911E331C7E06DA006BBB10 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = B4911E321C7E06DA006BBB10 /* main.c */; };
 		B4911E3B1C7E0BD5006BBB10 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = B4911E391C7E0BD5006BBB10 /* utils.c */; };
 		B4911E3D1C7E0CB1006BBB10 /* lsscp.c in Sources */ = {isa = PBXBuildFile; fileRef = B4911E3C1C7E0CB1006BBB10 /* lsscp.c */; };
 /* End PBXBuildFile section */
@@ -26,12 +25,13 @@
 
 /* Begin PBXFileReference section */
 		B4911E2F1C7E06DA006BBB10 /* HO-Project1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "HO-Project1"; sourceTree = BUILT_PRODUCTS_DIR; };
-		B4911E321C7E06DA006BBB10 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		B4911E391C7E0BD5006BBB10 /* utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
 		B4911E3C1C7E0CB1006BBB10 /* lsscp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lsscp.c; sourceTree = "<group>"; };
 		B4911E3E1C7E1532006BBB10 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
 		B4911E3F1C7E15B2006BBB10 /* lsscp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lsscp.h; sourceTree = "<group>"; };
 		B4A04C611C7F5B9F00878DBB /* SCP-Instances */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "SCP-Instances"; path = "../../SCP-Instances"; sourceTree = "<group>"; };
+		B4C5BCBF1C887ABE00399C98 /* run.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = run.sh; sourceTree = "<group>"; };
+		B4C5BCC01C887C3000399C98 /* output */ = {isa = PBXFileReference; lastKnownFileType = folder; path = output; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,8 +64,9 @@
 		B4911E311C7E06DA006BBB10 /* HO-Project1 */ = {
 			isa = PBXGroup;
 			children = (
+				B4C5BCC01C887C3000399C98 /* output */,
+				B4C5BCBF1C887ABE00399C98 /* run.sh */,
 				B4A04C611C7F5B9F00878DBB /* SCP-Instances */,
-				B4911E321C7E06DA006BBB10 /* main.c */,
 				B4911E391C7E0BD5006BBB10 /* utils.c */,
 				B4911E3E1C7E1532006BBB10 /* utils.h */,
 				B4911E3C1C7E0CB1006BBB10 /* lsscp.c */,
@@ -131,7 +132,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B4911E3D1C7E0CB1006BBB10 /* lsscp.c in Sources */,
-				B4911E331C7E06DA006BBB10 /* main.c in Sources */,
 				B4911E3B1C7E0BD5006BBB10 /* utils.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

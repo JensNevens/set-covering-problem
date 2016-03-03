@@ -18,8 +18,8 @@
 #include <math.h>
 #include <string.h>
 
-#include "utils.h"
 #include "lsscp.h"
+#include "utils.h"
 
 /*** Algorithm parameters **/
 int seed = 6666666;
@@ -272,11 +272,11 @@ void addSet(int colidx) {
     un_cols -= 1;
     for (int i = 0; i < nrow[colidx]; i++) {
         int rowidx = row[colidx][i];
-        if (!y[rowidx]) {
-            un_rows -= 1;
-            y[rowidx] = 1;
-        }
         ncol_cover[rowidx] += 1;
+        if (!y[rowidx]) {
+            y[rowidx] = 1;
+            un_rows -= 1;
+        }
         for (int j = 0; j < ncol[rowidx]; j++) {
             if (col_cover[rowidx][j] < 0) {
                 col_cover[rowidx][j] = colidx;
@@ -389,7 +389,7 @@ void eliminate() {
                     } else if (c == currCost) {
                         if (nrow[i] > nrow[currCol]) {
                             currCol = i;
-                            currCost = c;
+                            currCost = c; //TODO: isBetter(i,currcol,currCost)
                         }
                     }
                 }
@@ -467,29 +467,20 @@ int pickRandom(int setSize) {
            If false, add set to partial solution
  End */
 void randomConstruction() {
-    int retry = 0;
-    int rowidx = 0, colidx = 0;
-    while (!retry) {
-        while (!rowidx) {
-            int idx = pickRandom(m);
-            if (!y[idx]) {
-                rowidx = idx;
-            }
-        }
-        while (!colidx) {
-            int idx = pickRandom(ncol[rowidx]);
-            if (!x[col[rowidx][idx]]) {
-                colidx = col[rowidx][idx];
-            }
-        }
-        if (!redundant(colidx)) {
-            addSet(colidx);
-            retry = 1;
-        } else {
-            rowidx = 0;
-            colidx = 0;
+    int rowidx = -1, colidx = -1;
+    while (rowidx < 0) {
+        int idx = pickRandom(m);
+        if (!y[idx]) {
+            rowidx = idx;
         }
     }
+    while (colidx < 0) {
+        int idx = pickRandom(ncol[rowidx]);
+        if (!x[col[rowidx][idx]]) {
+            colidx = col[rowidx][idx];
+        }
+    }
+    addSet(colidx);
 }
 
 /************************************
@@ -538,7 +529,7 @@ void costBased() {
                 } else if (nrow[i] == nrow[colidx]) {
                     if (pickRandom(2)) {
                         colidx = i;
-                        currCost = c;
+                        currCost = c; //TODO: rewritten in a function isBetter(i,colidx,currCost)
                     }
                 }
             }
@@ -548,7 +539,7 @@ void costBased() {
 }
 
 /*** Dispatcher for constructive algorithms */
-void constructive() {
+void solve() {
     while (!isSolution()) {
         if (ch1) {
             randomConstruction();
@@ -561,32 +552,30 @@ void constructive() {
     if (re) {
         eliminate();
     }
+    if (bi) {
+        bestImprovement();
+    }
+    if (fi) {
+        firstImprovement();
+    }
 }
 
 /** Iterative algorithms */
 void bestImprovement() {}
 void firstImprovement() {}
 
-/*** Dispatcher for iterative algorithms */
-void iterative() {
-    if (bi) {
-        bestImprovement();
-    } else if (fi) {
-        firstImprovement();
-    }
-}
-
 
 /*** Main loop */
-void main_loop(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     read_parameters(argc, argv);
     read_scp(scp_file);
-    print_instance(0);
     initialize();
+    //print_instance(0);
     srand(seed);
-    constructive();
-    diagnostics();
+    solve();
+    //diagnostics();
     finalize();
-    printf("COST: %d\n", fx);
+    printf("%d", fx);
+    return 0;
 }
 

@@ -19,12 +19,11 @@
 #include <string.h>
 
 #include "lsscp.h"
-#include "utils.h"
 
 /*** Algorithm parameters **/
 int seed = 1234567;
-char *scp_file = "";
-char *output_file = "output.txt";
+char* scp_file = "";
+char* output_file = "output.txt";
 
 /** Variables to activate algorithms **/
 int ch1 = 0, ch2 = 0, ch3 = 0, ch4 = 0, bi = 0, fi = 0, re = 0;
@@ -32,16 +31,16 @@ int ch1 = 0, ch2 = 0, ch3 = 0, ch4 = 0, bi = 0, fi = 0, re = 0;
 /** Instance static variables **/
 int m;            /* number of rows */
 int n;            /* number of columns */
-int **row;        /* row[i] contains rows that are covered by column i */
-int **col;        /* col[i] contains columns that cover row i */
-int *ncol;        /* ncol[i] contains number of columns that cover row i */
-int *nrow;        /* nrow[i] contains number of rows that are covered by column i */
-int *cost;        /* cost[i] contains cost of column i  */
-float *ccost;     /* ccost[i] contains static cover cost of column i */
+int** row;        /* row[i] contains rows that are covered by column i */
+int** col;        /* col[i] contains columns that cover row i */
+int* ncol;        /* ncol[i] contains number of columns that cover row i */
+int* nrow;        /* nrow[i] contains number of rows that are covered by column i */
+int* cost;        /* cost[i] contains cost of column i  */
+float* ccost;     /* ccost[i] contains static cover cost of column i */
 
 /** Solution variables **/
-int *x;           /* x[i] 0,1 if column i is selected */
-int *y;           /* y[i] 0,1 if row i covered by the actual solution */
+int* x;           /* x[i] 0,1 if column i is selected */
+int* y;           /* y[i] 0,1 if row i covered by the actual solution */
 int fx;         /* sum of the cost of the columns selected in the solution (can be partial) */
 
 /** Dynamic variables **/
@@ -49,8 +48,8 @@ int fx;         /* sum of the cost of the columns selected in the solution (can 
 /** these are just examples of useful variables. **/
 /** These variables need to be updated eveytime a column is added to a partial solution **/
 /** or when a complete solution is modified */
-int **col_cover;  /* col_colver[i] contains selected columns that cover row i */
-int *ncol_cover;  /* ncol_cover[i] contains number of selected columns that cover row i */
+int** col_cover;  /* col_colver[i] contains selected columns that cover row i */
+int* ncol_cover;  /* ncol_cover[i] contains number of selected columns that cover row i */
 int un_rows;      /* the amount of un-covered rows */
 int un_cols;      /* the amoung of un-used columns */
 
@@ -73,7 +72,7 @@ void usage() {
 
 
 /*** Read parameters from command line*/
-void readParameters(int argc, char *argv[]) {
+void readParameters(int argc, char* argv[]) {
     int i;
     if (argc <= 1) {
         usage();
@@ -91,90 +90,81 @@ void readParameters(int argc, char *argv[]) {
             i += 1;
         } else if (strcmp(argv[i], "--ch1") == 0) {
             if (ch2 || ch3 || ch4) {
-                printf("ERROR: Only use 1 constructive algorithm.\n");
-                exit(EXIT_FAILURE);
+                errorExit("ERROR: Only use 1 constructive algorithm.\n");
             }
             ch1 = 1;
         } else if (strcmp(argv[i], "--ch2") == 0) {
             if (ch1 || ch3 || ch4) {
-                printf("ERROR: Only use 1 constructive algorithm.\n");
-                exit(EXIT_FAILURE);
+                errorExit("ERROR: Only use 1 constructive algorithm.\n");
             }
             ch2 = 1;
         } else if (strcmp(argv[i], "--ch3") == 0) {
             if (ch1 || ch2 || ch4) {
-                printf("ERROR: Only use 1 constructive algorithm.\n");
-                exit(EXIT_FAILURE);
+                errorExit("ERROR: Only use 1 constructive algorithm.\n");
             }
             ch3 = 1;
         } else if (strcmp(argv[i], "--ch4") == 0) {
             if (ch1 || ch2 || ch3) {
-                printf("ERROR: Only use 1 constructive algorithm.\n");
-                exit(EXIT_FAILURE);
+                errorExit("ERROR: Only use 1 constructive algorithm.\n");
             }
             ch4 = 1;
         } else if (strcmp(argv[i], "--bi") == 0) {
             if (fi) {
-                printf("ERROR: Only use 1 iterative algorithm.");
-                exit(EXIT_FAILURE);
+                errorExit("ERROR: Only use 1 iterative algorithm.");
             }
             bi = 1;
         } else if (strcmp(argv[i], "--fi") == 0) {
             if (bi) {
-                printf("ERROR: Only use 1 iterative algorithm.\n");
-                exit(EXIT_FAILURE);
+                errorExit("ERROR: Only use 1 iterative algorithm.\n");
             }
             fi = 1;
         } else if (strcmp(argv[i], "--re") == 0) {
             re = 1;
         } else {
             printf("ERROR: parameter %s not recognized.\n", argv[i]);
-            usage();
-            exit(EXIT_FAILURE);
+            errorExit("ERROR");
         }
     }
     if((scp_file == NULL) || ((scp_file != NULL) && (scp_file[0] == '\0'))) {
-        printf("ERROR: --instance must be provided.\n");
-        usage();
-        exit(EXIT_FAILURE);
+        errorExit("ERROR: --instance must be provided.\n");
     }
 }
 
 /*** Read instance in the OR-LIBRARY format ***/
-void readSCP(char *filename) {
+void readSCP(char* filename) {
     int h,i,j;
-    int *k;
-    FILE *fp = fopen(filename, "r");
+    int* k;
+    FILE* fp = fopen(filename, "r");
     
     if (!fp)
-        error_reading_file("ERROR: Error in opening the file.\n");
+        errorExit("ERROR: Error in opening the file.\n");
     if (fscanf(fp,"%d",&m) != 1) /* number of rows */
-        error_reading_file("ERROR: Error reading number of rows.\n");
+        errorExit("ERROR: Error reading number of rows.\n");
     if (fscanf(fp,"%d",&n) != 1) /* number of columns */
-        error_reading_file("ERROR: Error reading number of columns.\n");
+        errorExit("ERROR: Error reading number of columns.\n");
     /* Cost of the n columns */
-    cost = (int *) mymalloc(n * sizeof(int));
+    cost = (int*) mymalloc(n * sizeof(int));
     for (j = 0; j < n; j++)
         if (fscanf(fp,"%d",&cost[j]) != 1)
-            error_reading_file("ERROR: Error reading cost.\n");
+            errorExit("ERROR: Error reading cost.\n");
     
     /* Info of columns that cover each row */
-    col  = (int **) mymalloc(m * sizeof(int *));
-    ncol = (int *) mymalloc(m * sizeof(int));
+    col  = (int**) mymalloc(m * sizeof(int*));
+    ncol = (int*) mymalloc(m * sizeof(int));
     for (i = 0; i < m; i++) {
         if (fscanf(fp,"%d",&ncol[i]) != 1)
-            error_reading_file("ERROR: Error reading number of columns.\n");
+            errorExit("ERROR: Error reading number of columns.\n");
         col[i] = (int *) mymalloc(ncol[i] * sizeof(int));
         for (h = 0; h < ncol[i]; h++) {
             if(fscanf(fp,"%d",&col[i][h]) != 1)
-                error_reading_file("ERROR: Error reading columns.\n");
+                errorExit("ERROR: Error reading columns.\n");
             col[i][h]--;
         }
     }
     /* Info of rows that are covered by each column */
-    row  = (int **) mymalloc(n*sizeof(int *));
-    nrow = (int *) mymalloc(n*sizeof(int));
-    k    = (int *) mymalloc(n*sizeof(int));
+    row  = (int**) mymalloc(n*sizeof(int*));
+    nrow = (int*) mymalloc(n*sizeof(int));
+    k    = (int*) mymalloc(n*sizeof(int));
     for (j = 0; j < n; j++) nrow[j] = 0;
     for (i = 0; i < m; i++) {
         for (h = 0; h < ncol[i]; h++)
@@ -190,7 +180,7 @@ void readSCP(char *filename) {
             k[col[i][h]]++;
         }
     }
-    free((void *) k);
+    free((void*) k);
 }
 
 /*** Use level>=1 to print more info */
@@ -240,18 +230,32 @@ void initialize() {
     }
 }
 
+void* mymalloc(size_t size) {
+    void *s;
+    if ((s=malloc(size)) == NULL) {
+        fprintf(stderr, "malloc : Not enough memory.\n");
+        exit(EXIT_FAILURE);
+    }
+    return s;
+}
+
+void errorExit(char* text) {
+    printf("%s\n", text);
+    exit(EXIT_FAILURE);
+}
+
 /*** Use this function to finalize execution */
 void finalize() {
-    free((void **) row);
-    free((void **) col);
-    free((void *) nrow);
-    free((void *) ncol);
-    free((void *) cost);
-    free((void *) ccost);
-    free((void *) x);
-    free((void *) y);
-    free((void **) col_cover);
-    free((void *) ncol_cover);
+    free((void**) row);
+    free((void**) col);
+    free((void*) nrow);
+    free((void*) ncol);
+    free((void*) cost);
+    free((void*) ccost);
+    free((void*) x);
+    free((void*) y);
+    free((void**) col_cover);
+    free((void*) ncol_cover);
 }
 
 /********************************
@@ -539,7 +543,18 @@ void costBased() {
     addSet(currCol);
 }
 
-/*** Dispatcher for constructive algorithms */
+/********************
+ Iterative algorithms 
+ *******************/
+// A neighborhood = remove one subset from the solution
+// and complete it again with the Adaptive Cover Cost based
+// greedy values of the available subsets. Ofcourse, don't
+// replace a subset with itself. Apply redundancy elimination
+// when complete.
+void bestImprovement() {}
+void firstImprovement() {}
+
+/*** Dispatcher */
 void solve() {
     while (!isSolution()) {
         if (ch1) {
@@ -550,24 +565,19 @@ void solve() {
             printf("ERROR: No constructive algorithm selected.\n");
         }
     }
-    if (re) {
-        eliminate();
-    }
     if (bi) {
         bestImprovement();
     }
     if (fi) {
         firstImprovement();
     }
+    if (re) {
+        eliminate();
+    }
 }
 
-/** Iterative algorithms */
-void bestImprovement() {}
-void firstImprovement() {}
-
-
 /*** Main loop */
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     readParameters(argc, argv);
     readSCP(scp_file);
     initialize();

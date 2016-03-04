@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B4911E3B1C7E0BD5006BBB10 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = B4911E391C7E0BD5006BBB10 /* utils.c */; };
 		B4911E3D1C7E0CB1006BBB10 /* lsscp.c in Sources */ = {isa = PBXBuildFile; fileRef = B4911E3C1C7E0CB1006BBB10 /* lsscp.c */; };
+		B4CE32B41C89816200D47F84 /* construct.c in Sources */ = {isa = PBXBuildFile; fileRef = B4CE32B21C89816200D47F84 /* construct.c */; };
+		B4CE32B71C89817100D47F84 /* improve.c in Sources */ = {isa = PBXBuildFile; fileRef = B4CE32B51C89817100D47F84 /* improve.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,13 +26,16 @@
 
 /* Begin PBXFileReference section */
 		B4911E2F1C7E06DA006BBB10 /* HO-Project1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "HO-Project1"; sourceTree = BUILT_PRODUCTS_DIR; };
-		B4911E391C7E0BD5006BBB10 /* utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
 		B4911E3C1C7E0CB1006BBB10 /* lsscp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lsscp.c; sourceTree = "<group>"; };
-		B4911E3E1C7E1532006BBB10 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
 		B4911E3F1C7E15B2006BBB10 /* lsscp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lsscp.h; sourceTree = "<group>"; };
 		B4A04C611C7F5B9F00878DBB /* SCP-Instances */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "SCP-Instances"; path = "../../SCP-Instances"; sourceTree = "<group>"; };
 		B4C5BCBF1C887ABE00399C98 /* run.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = run.sh; sourceTree = "<group>"; };
 		B4C5BCC01C887C3000399C98 /* output */ = {isa = PBXFileReference; lastKnownFileType = folder; path = output; sourceTree = "<group>"; };
+		B4CE32B21C89816200D47F84 /* construct.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = construct.c; sourceTree = "<group>"; };
+		B4CE32B31C89816200D47F84 /* construct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = construct.h; sourceTree = "<group>"; };
+		B4CE32B51C89817100D47F84 /* improve.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = improve.c; sourceTree = "<group>"; };
+		B4CE32B61C89817100D47F84 /* improve.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = improve.h; sourceTree = "<group>"; };
+		B4CE32B81C89893300D47F84 /* best.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = best.txt; path = ../../best.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,13 +68,16 @@
 		B4911E311C7E06DA006BBB10 /* HO-Project1 */ = {
 			isa = PBXGroup;
 			children = (
+				B4CE32B81C89893300D47F84 /* best.txt */,
 				B4C5BCC01C887C3000399C98 /* output */,
 				B4C5BCBF1C887ABE00399C98 /* run.sh */,
 				B4A04C611C7F5B9F00878DBB /* SCP-Instances */,
-				B4911E391C7E0BD5006BBB10 /* utils.c */,
-				B4911E3E1C7E1532006BBB10 /* utils.h */,
 				B4911E3C1C7E0CB1006BBB10 /* lsscp.c */,
 				B4911E3F1C7E15B2006BBB10 /* lsscp.h */,
+				B4CE32B21C89816200D47F84 /* construct.c */,
+				B4CE32B31C89816200D47F84 /* construct.h */,
+				B4CE32B51C89817100D47F84 /* improve.c */,
+				B4CE32B61C89817100D47F84 /* improve.h */,
 			);
 			path = "HO-Project1";
 			sourceTree = "<group>";
@@ -131,8 +138,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B4CE32B71C89817100D47F84 /* improve.c in Sources */,
+				B4CE32B41C89816200D47F84 /* construct.c in Sources */,
 				B4911E3D1C7E0CB1006BBB10 /* lsscp.c in Sources */,
-				B4911E3B1C7E0BD5006BBB10 /* utils.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

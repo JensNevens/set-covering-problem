@@ -11,10 +11,12 @@
 
 // General functions
 void usage();
-void readParameters(int argc, char *argv[]);
-void readSCP(char *filename);
+void readParameters(int argc, char* argv[]);
+void readSCP(char* filename);
 void printInstance(int level);
 void initialize();
+void* mymalloc(size_t size);
+void errorExit(char* text);
 void finalize();
 int main(int argc, char *argv[]);
 void solve();

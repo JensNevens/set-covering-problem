@@ -20,27 +20,32 @@
 
 #include "lsscp.h"
 
-/*** Algorithm parameters **/
+/********************
+ Algorithm parameters
+ *******************/
 int seed = 1234567;
 char* scp_file = "";
 char* output_file = "output.txt";
-
-/** Variables to activate algorithms **/
 int ch1 = 0, ch2 = 0, ch3 = 0, ch4 = 0, bi = 0, fi = 0, re = 0;
 
-/** Instance static variables **/
-int m;            /* number of rows */
-int n;            /* number of columns */
-int** row;        /* row[i] contains rows that are covered by column i */
-int** col;        /* col[i] contains columns that cover row i */
-int* ncol;        /* ncol[i] contains number of columns that cover row i */
-int* nrow;        /* nrow[i] contains number of rows that are covered by column i */
-int* cost;        /* cost[i] contains cost of column i  */
-float* ccost;     /* ccost[i] contains static cover cost of column i */
+/****************
+ Static variables
+ ****************/
+int m;            // number of rows
+int n;            // number of columns
+int** row;        // row[i] contains rows that are covered by column i
+int** col;        // col[i] contains columns that cover row i
+int* ncol;        // ncol[i] contains number of columns that cover row i
+int* nrow;        // nrow[i] contains number of rows that are covered by column i
+int* cost;        // cost[i] contains cost of column i
+float* ccost;     // ccost[i] contains static cover cost of column i
 
-solution_t* soln;
-solution_t* cpy;
-solution_t* best;
+/****************
+ Solution structs 
+ ****************/
+solution_t* soln; // main solution struct
+solution_t* cpy;  // copy of solution, used by iterative improvement
+solution_t* best; // copy of solution, placeholder for best improvement
 
 void usage() {
     printf("\nUSAGE: lsscp [param_name, param_value] [options]...\n");
@@ -60,7 +65,7 @@ void usage() {
 }
 
 
-/*** Read parameters from command line*/
+/*** Read parameters from command line **/
 void readParameters(int argc, char* argv[]) {
     int i;
     if (argc <= 1) {
@@ -119,7 +124,7 @@ void readParameters(int argc, char* argv[]) {
     }
 }
 
-/*** Read instance in the OR-LIBRARY format ***/
+/*** Read instance in the OR-LIBRARY format **/
 void readSCP(char* filename) {
     int h,i,j;
     int* k;
@@ -131,13 +136,13 @@ void readSCP(char* filename) {
         errorExit("ERROR: Error reading number of rows.\n");
     if (fscanf(fp,"%d",&n) != 1) /* number of columns */
         errorExit("ERROR: Error reading number of columns.\n");
-    /* Cost of the n columns */
+    // Cost of the n columns
     cost = (int*) mymalloc(n * sizeof(int));
     for (j = 0; j < n; j++)
         if (fscanf(fp,"%d",&cost[j]) != 1)
             errorExit("ERROR: Error reading cost.\n");
     
-    /* Info of columns that cover each row */
+    // Info of columns that cover each row
     col  = (int**) mymalloc(m * sizeof(int*));
     ncol = (int*) mymalloc(m * sizeof(int));
     for (i = 0; i < m; i++) {
@@ -150,7 +155,7 @@ void readSCP(char* filename) {
             col[i][h]--;
         }
     }
-    /* Info of rows that are covered by each column */
+    // Info of rows that are covered by each column
     row  = (int**) mymalloc(n*sizeof(int*));
     nrow = (int*) mymalloc(n*sizeof(int));
     k    = (int*) mymalloc(n*sizeof(int));
@@ -172,7 +177,7 @@ void readSCP(char* filename) {
     free((void*) k);
 }
 
-/*** Use level>=1 to print more info */
+/*** Use level>=1 to print more info **/
 void printInstance(int level) {
     int i;
     printf("**********************************************\n");
@@ -235,7 +240,7 @@ void errorExit(char* text) {
     exit(EXIT_FAILURE);
 }
 
-/*** Use this function to finalize execution */
+/*** Use this function to finalize execution **/
 void finalize() {
     free((void**) row);
     free((void**) col);
@@ -252,14 +257,16 @@ void finalize() {
  Functions used by all algorithms
  ********************************/
 
-/*** When adding a set with colidx to the partial solution:
+/*** 
+ When adding a set with colidx to the partial solution:
  1. Indicate that column is selected (x)
  2. Add cost of column to partial cost (fx)
  3. Decrement # of un-used columns (un_cols)
  4. Indicate that each row covered by column is selected (y)
  5. Increment # of columns covering each row (ncol_cover)
  6. Decrement # of un-covered rows (un_rows)
- 7. Add column to all columns covering row i (col_cover) */
+ 7. Add column to all columns covering row i (col_cover) 
+**/
 void addSet(solution_t* sol, int colidx) {
     sol->x[colidx] = 1;
     sol->fx += cost[colidx];
@@ -280,9 +287,11 @@ void addSet(solution_t* sol, int colidx) {
     }
 }
 
-/*** Check if set colidx is redundant.
+/***
+ Check if set colidx is redundant.
  Assume set is redundant. When one element is found
- that is not yet covered, the set is not redundant. */
+ that is not yet covered, the set is not redundant. 
+**/
 int redundant(solution_t* sol, int colidx) {
     int redundantBool = 1;
     for (int i = 0; i < nrow[colidx]; i++) {
@@ -297,8 +306,8 @@ int redundant(solution_t* sol, int colidx) {
 /***
  When an element is removed from col_cover for row rowidx,
  then the remaining elements need to be shifted, so there
- are no zeros in between.
-*/
+ are no dummy columns (-1) in between.
+**/
 void shift(solution_t* sol, int rowidx, int start) {
     for (int i = start; i < sol->ncol_cover[rowidx]; i++) {
         if (i+1 < sol->ncol_cover[rowidx]) {
@@ -314,7 +323,8 @@ void shift(solution_t* sol, int rowidx, int start) {
     }
 }
 
-/*** When removing a set from the partial solution
+/***
+ When removing a set from the partial solution
  1. Indicate that the column is no longer selected (x)
  2. Remove cost of column from partial cost (fx)
  3. Increment # of un-used columns (un_cols)
@@ -322,7 +332,7 @@ void shift(solution_t* sol, int rowidx, int start) {
  5. Remove column from all columns covering row i (col_cover)
  6. If a row is now uncovered, increment un_rows
  7. If a row is now uncovered, indicate it (y)
-*/
+**/
 void removeSet(solution_t* sol, int colidx) {
     sol->x[colidx] = 0;
     sol->fx -= cost[colidx];
@@ -344,6 +354,9 @@ void removeSet(solution_t* sol, int colidx) {
     }
 }
 
+/***
+ 
+**/
 int isBetter(int newCol, float newCost, int currCol, float currCost) {
     int result = 0;
     if (!currCost || newCost < currCost) {

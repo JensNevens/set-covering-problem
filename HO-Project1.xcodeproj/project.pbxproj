@@ -26,10 +26,10 @@
 		B4911E2F1C7E06DA006BBB10 /* HO-Project1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "HO-Project1"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4911E3C1C7E0CB1006BBB10 /* lsscp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lsscp.c; sourceTree = "<group>"; };
 		B4911E3F1C7E15B2006BBB10 /* lsscp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lsscp.h; sourceTree = "<group>"; };
-		B4A04C611C7F5B9F00878DBB /* SCP-Instances */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "SCP-Instances"; path = "../../SCP-Instances"; sourceTree = "<group>"; };
+		B4B8EB151C8B2D2F00FD3B44 /* SCP-Instances */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "SCP-Instances"; sourceTree = "<group>"; };
+		B4B8EB161C8B2D9400FD3B44 /* best.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = best.txt; path = ../../best.txt; sourceTree = "<group>"; };
 		B4C5BCBF1C887ABE00399C98 /* run.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = run.sh; sourceTree = "<group>"; };
 		B4C5BCC01C887C3000399C98 /* output */ = {isa = PBXFileReference; lastKnownFileType = folder; path = output; sourceTree = "<group>"; };
-		B4CE32B81C89893300D47F84 /* best.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = best.txt; path = ../../best.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,10 +62,10 @@
 		B4911E311C7E06DA006BBB10 /* HO-Project1 */ = {
 			isa = PBXGroup;
 			children = (
-				B4CE32B81C89893300D47F84 /* best.txt */,
+				B4B8EB161C8B2D9400FD3B44 /* best.txt */,
+				B4B8EB151C8B2D2F00FD3B44 /* SCP-Instances */,
 				B4C5BCC01C887C3000399C98 /* output */,
 				B4C5BCBF1C887ABE00399C98 /* run.sh */,
-				B4A04C611C7F5B9F00878DBB /* SCP-Instances */,
 				B4911E3C1C7E0CB1006BBB10 /* lsscp.c */,
 				B4911E3F1C7E15B2006BBB10 /* lsscp.h */,
 			);

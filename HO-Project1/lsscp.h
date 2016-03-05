@@ -11,13 +11,13 @@
 
 // Solution struct
 struct Solution {
-    int* x;          /* x[i] 0,1 if column i is selected */
-    int* y;          /* y[i] 0,1 if row i covered by the actual solution */
-    int fx;          /* sum of the cost of the columns selected in the solution */
-    int** col_cover; /* col_colver[i] contains selected columns that cover row i */
-    int* ncol_cover; /* ncol_cover[i] contains number of selected columns that cover row i */
-    int un_rows;     /* the amount of un-covered rows */
-    int un_cols;     /* the amoung of un-used columns */
+    int* x;          // x[i] 0,1 if column i is selected
+    int* y;          // y[i] 0,1 if row i covered by the actual solution
+    int fx;          // sum of the cost of the columns selected in the solution
+    int** col_cover; // col_colver[i] contains selected columns that cover row i
+    int* ncol_cover; // ncol_cover[i] contains number of selected columns that cover row i
+    int un_rows;     // the amount of un-covered rows
+    int un_cols;     // the amount of un-used columns
 } Solution;
 
 typedef struct Solution solution_t;
@@ -59,7 +59,7 @@ void copySolution(solution_t* from, solution_t* to);
 void replaceSet(int colidx);
 void improve();
 
-// Dispatcher
+// Main
 void solve();
 int main(int argc, char *argv[]);
 

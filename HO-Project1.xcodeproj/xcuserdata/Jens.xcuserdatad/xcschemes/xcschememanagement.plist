@@ -76,6 +76,8 @@
 		</dict>
 		<key>ch4-re.xcscheme</key>
 		<dict>
+			<key>isShown</key>
+			<true/>
 			<key>orderHint</key>
 			<integer>11</integer>
 		</dict>

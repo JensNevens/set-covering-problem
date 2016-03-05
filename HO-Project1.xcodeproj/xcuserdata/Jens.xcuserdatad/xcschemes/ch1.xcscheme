@@ -67,7 +67,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--instance /Users/Jens/Documents/Jens/School/1MA/Heuristic\ Optimization/Assignments/Assignment1/SCP-Instances/scp55.txt"
+            argument = "--instance /Users/Jens/Documents/Jens/School/1MA/Heuristic\ Optimization/Assignments/Assignment1/SCP-Instances/scp42.txt"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

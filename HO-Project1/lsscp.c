@@ -38,20 +38,9 @@ int* nrow;        /* nrow[i] contains number of rows that are covered by column 
 int* cost;        /* cost[i] contains cost of column i  */
 float* ccost;     /* ccost[i] contains static cover cost of column i */
 
-/** Solution variables **/
-int* x;           /* x[i] 0,1 if column i is selected */
-int* y;           /* y[i] 0,1 if row i covered by the actual solution */
-int fx;         /* sum of the cost of the columns selected in the solution (can be partial) */
-
-/** Dynamic variables **/
-/** Note: use dynamic variables to make easier the construction and modification of solutions. **/
-/** these are just examples of useful variables. **/
-/** These variables need to be updated eveytime a column is added to a partial solution **/
-/** or when a complete solution is modified */
-int** col_cover;  /* col_colver[i] contains selected columns that cover row i */
-int* ncol_cover;  /* ncol_cover[i] contains number of selected columns that cover row i */
-int un_rows;      /* the amount of un-covered rows */
-int un_cols;      /* the amoung of un-used columns */
+solution_t* soln;
+solution_t* cpy;
+solution_t* best;
 
 void usage() {
     printf("\nUSAGE: lsscp [param_name, param_value] [options]...\n");
@@ -208,24 +197,26 @@ void printInstance(int level) {
 
 /*** Use this function to initialize other variables of the algorithms **/
 void initialize() {
-    un_rows = m;
-    un_cols = n;
-    x = (int *) mymalloc(n * sizeof(int));
-    y = (int *) mymalloc(m * sizeof(int));
-    col_cover = (int **) mymalloc(m * sizeof(int *));
-    ncol_cover = (int *) mymalloc(m * sizeof(int));
+    soln = mymalloc(sizeof(solution_t));
+    soln->fx = 0;
+    soln->un_rows = m;
+    soln->un_cols = n;
+    soln->x = (int *) mymalloc(n * sizeof(int));
+    soln->y = (int *) mymalloc(m * sizeof(int));
+    soln->col_cover = (int **) mymalloc(m * sizeof(int *));
+    soln->ncol_cover = (int *) mymalloc(m * sizeof(int));
     ccost = (float *) mymalloc(n * sizeof(float));
     for (int i = 0; i < n; i++) {
-        x[i] = 0;
+        soln->x[i] = 0;
         ccost[i] = (float) cost[i] / (float) nrow[i];
     }
     for (int i = 0; i < m; i++) {
-        y[i] = 0;
-        ncol_cover[i] = 0;
+        soln->y[i] = 0;
+        soln->ncol_cover[i] = 0;
         int k = ncol[i];
-        col_cover[i] = (int *) mymalloc(k * sizeof(int));
+        soln->col_cover[i] = (int *) mymalloc(k * sizeof(int));
         for (int j = 0; j < k; j++) {
-            col_cover[i][j] = -1;
+            soln->col_cover[i][j] = -1;
         }
     }
 }
@@ -252,10 +243,9 @@ void finalize() {
     free((void*) ncol);
     free((void*) cost);
     free((void*) ccost);
-    free((void*) x);
-    free((void*) y);
-    free((void**) col_cover);
-    free((void*) ncol_cover);
+    free((void*) soln);
+    free((void*) cpy);
+    free((void*) best);
 }
 
 /********************************
@@ -270,20 +260,20 @@ void finalize() {
  5. Increment # of columns covering each row (ncol_cover)
  6. Decrement # of un-covered rows (un_rows)
  7. Add column to all columns covering row i (col_cover) */
-void addSet(int colidx) {
-    x[colidx] = 1;
-    fx += cost[colidx];
-    un_cols -= 1;
+void addSet(solution_t* sol, int colidx) {
+    sol->x[colidx] = 1;
+    sol->fx += cost[colidx];
+    sol->un_cols -= 1;
     for (int i = 0; i < nrow[colidx]; i++) {
         int rowidx = row[colidx][i];
-        ncol_cover[rowidx] += 1;
-        if (!y[rowidx]) {
-            y[rowidx] = 1;
-            un_rows -= 1;
+        sol->ncol_cover[rowidx] += 1;
+        if (!sol->y[rowidx]) {
+            sol->y[rowidx] = 1;
+            sol->un_rows -= 1;
         }
         for (int j = 0; j < ncol[rowidx]; j++) {
-            if (col_cover[rowidx][j] < 0) {
-                col_cover[rowidx][j] = colidx;
+            if (sol->col_cover[rowidx][j] < 0) {
+                sol->col_cover[rowidx][j] = colidx;
                 break;
             }
         }
@@ -293,10 +283,10 @@ void addSet(int colidx) {
 /*** Check if set colidx is redundant.
  Assume set is redundant. When one element is found
  that is not yet covered, the set is not redundant. */
-int redundant(int colidx) {
+int redundant(solution_t* sol, int colidx) {
     int redundantBool = 1;
     for (int i = 0; i < nrow[colidx]; i++) {
-        if (!y[row[colidx][i]]) {
+        if (!sol->y[row[colidx][i]]) {
             redundantBool = 0;
             break;
         }
@@ -309,17 +299,17 @@ int redundant(int colidx) {
  then the remaining elements need to be shifted, so there
  are no zeros in between.
 */
-void shift(int rowidx, int start) {
-    for (int i = start; i < ncol_cover[rowidx]; i++) {
-        if (i+1 < ncol_cover[rowidx]) {
-            if (col_cover[rowidx][i+1] >= 0) {
-                col_cover[rowidx][i] = col_cover[rowidx][i+1];
+void shift(solution_t* sol, int rowidx, int start) {
+    for (int i = start; i < sol->ncol_cover[rowidx]; i++) {
+        if (i+1 < sol->ncol_cover[rowidx]) {
+            if (sol->col_cover[rowidx][i+1] >= 0) {
+                sol->col_cover[rowidx][i] = sol->col_cover[rowidx][i+1];
             } else {
-                col_cover[rowidx][i] = -1;
+                sol->col_cover[rowidx][i] = -1;
                 break;
             }
         } else {
-            col_cover[rowidx][i] = -1;
+            sol->col_cover[rowidx][i] = -1;
         }
     }
 }
@@ -330,21 +320,27 @@ void shift(int rowidx, int start) {
  3. Increment # of un-used columns (un_cols)
  4. Decrement # of columns covering each row (ncol_cover)
  5. Remove column from all columns covering row i (col_cover)
+ 6. If a row is now uncovered, increment un_rows
+ 7. If a row is now uncovered, indicate it (y)
 */
-void removeSet(int colidx) {
-    x[colidx] = 0;
-    fx -= cost[colidx];
-    un_cols += 1;
+void removeSet(solution_t* sol, int colidx) {
+    sol->x[colidx] = 0;
+    sol->fx -= cost[colidx];
+    sol->un_cols += 1;
     for (int i = 0; i < nrow[colidx]; i++) {
         int rowidx = row[colidx][i];
-        for (int j = 0; j < ncol_cover[rowidx]; j++) {
-            if (col_cover[rowidx][j] == colidx) {
-                col_cover[rowidx][j] = -1;
-                shift(rowidx, j);
+        for (int j = 0; j < sol->ncol_cover[rowidx]; j++) {
+            if (sol->col_cover[rowidx][j] == colidx) {
+                sol->col_cover[rowidx][j] = -1;
+                shift(sol, rowidx, j);
                 break;
             }
         }
-        ncol_cover[rowidx] -= 1;
+        sol->ncol_cover[rowidx] -= 1;
+        if (sol->ncol_cover[rowidx] <= 0) {
+            sol->un_rows += 1;
+            sol->y[rowidx] = 0;
+        }
     }
 }
 
@@ -388,11 +384,11 @@ void eliminate() {
         currCol = -1;
         currCost = 0;
         for (int i = 0; i < n; i++) {
-            if (x[i]) {
+            if (soln->x[i]) {
                 redundantBool = 1;
                 for (int j = 0; j < m; j++) {
-                    for (int k = 0; k < ncol_cover[j]; k++) {
-                        if (col_cover[j][k] == i && ncol_cover[j] <= 1) {
+                    for (int k = 0; k < soln->ncol_cover[j]; k++) {
+                        if (soln->col_cover[j][k] == i && soln->ncol_cover[j] <= 1) {
                             redundantBool = 0;
                             break;
                         }
@@ -411,7 +407,7 @@ void eliminate() {
             }
         }
         if (currCol >= 0) {
-            removeSet(currCol);
+            removeSet(soln, currCol);
             removed = 1;
         }
     }
@@ -419,21 +415,21 @@ void eliminate() {
 
 /*** Check if the current solution is a solution.
  i.e. when no rows are un-covered. */
-int isSolution() {
-    return (un_rows <= 0);
+int isSolution(solution_t* sol) {
+    return (sol->un_rows <= 0);
 }
 
 /*** Prints diagnostic information about the solution */
 void diagnostics() {
     for (int i = 0; i < m; i++) {
-        if (y[i]) {
-            printf("ELEMENT %d COVERED BY %d SET(S)\n", i, ncol_cover[i]);
-            for (int j = 0; j < ncol_cover[i]; j++) {
-                if (col_cover[i][j] < 0) {
+        if (soln->y[i]) {
+            printf("ELEMENT %d COVERED BY %d SET(S)\n", i, soln->ncol_cover[i]);
+            for (int j = 0; j < soln->ncol_cover[i]; j++) {
+                if (soln->col_cover[i][j] < 0) {
                     printf("---\n");
                     break;
                 } else {
-                    printf("---SET %d\n", col_cover[i][j]);
+                    printf("---SET %d\n", soln->col_cover[i][j]);
                 }
             }
         } else {
@@ -485,27 +481,27 @@ void randomConstruction() {
     int rowidx = -1, colidx = -1;
     while (rowidx < 0) {
         int idx = pickRandom(m);
-        if (!y[idx]) {
+        if (!soln->y[idx]) {
             rowidx = idx;
         }
     }
     while (colidx < 0) {
         int idx = pickRandom(ncol[rowidx]);
-        if (!x[col[rowidx][idx]]) {
+        if (!soln->x[col[rowidx][idx]]) {
             colidx = col[rowidx][idx];
         }
     }
-    addSet(colidx);
+    addSet(soln, colidx);
 }
 
 /************************************
  Functions used by Cost Constructions
  ************************************/
 
-float adaptiveCost(int colidx) {
+float adaptiveCost(solution_t* sol, int colidx) {
     int covers = 0;
     for (int i = 0; i < nrow[colidx]; i++) {
-        if (!y[row[colidx][i]]) {
+        if (!sol->y[row[colidx][i]]) {
             covers += 1;
         }
     }
@@ -519,7 +515,7 @@ float getCost(int colidx) {
     } else if (ch3) {
         c = ccost[colidx];
     } else if (ch4) {
-        c = adaptiveCost(colidx);
+        c = adaptiveCost(soln, colidx);
     }
     return c;
 }
@@ -532,7 +528,7 @@ void costBased() {
     int currCol = -1;
     float currCost = 0.0;
     for (int i = 0; i < n; i++) {
-        if (!x[i] && !redundant(i)) {
+        if (!soln->x[i] && !redundant(soln, i)) {
             float c = getCost(i);
             if (isBetter(i, c, currCol, currCost)) {
                 currCol = i;
@@ -540,23 +536,140 @@ void costBased() {
             }
         }
     }
-    addSet(currCol);
+    if (currCol >= 0) {
+        addSet(soln, currCol);
+    }
 }
 
 /********************
  Iterative algorithms 
  *******************/
+void initCopy() {
+    cpy = mymalloc(sizeof(solution_t));
+    cpy->fx = soln->fx;
+    cpy->un_rows = soln->un_rows;
+    cpy->un_cols = soln->un_cols;
+    cpy->x = (int*) mymalloc(n * sizeof(int));
+    cpy->y = (int*) mymalloc(m * sizeof(int));
+    cpy->col_cover = (int**) mymalloc(m * sizeof(int *));
+    cpy->ncol_cover = (int*) mymalloc(m * sizeof(int));
+    for (int i = 0; i < n; i++) {
+        cpy->x[i] = soln->x[i];
+    }
+    for (int i = 0; i < m; i++) {
+        cpy->y[i] = soln->y[i];
+        cpy->ncol_cover[i] = soln->ncol_cover[i];
+        int k = ncol[i];
+        cpy->col_cover[i] = (int*) mymalloc(k * sizeof(int));
+        for (int j = 0; j < k; j++) {
+            cpy->col_cover[i][j] = soln->col_cover[i][j];
+        }
+    }
+}
+
+void initBest() {
+    best = mymalloc(sizeof(solution_t));
+    best->fx = soln->fx;
+    best->un_rows = soln->un_rows;
+    best->un_cols = soln->un_cols;
+    best->x = (int*) mymalloc(n * sizeof(int));
+    best->y = (int*) mymalloc(m * sizeof(int));
+    best->col_cover = (int**) mymalloc(m * sizeof(int *));
+    best->ncol_cover = (int*) mymalloc(m * sizeof(int));
+    for (int i = 0; i < n; i++) {
+        best->x[i] = soln->x[i];
+    }
+    for (int i = 0; i < m; i++) {
+        best->y[i] = soln->y[i];
+        best->ncol_cover[i] = soln->ncol_cover[i];
+        int k = ncol[i];
+        best->col_cover[i] = (int*) mymalloc(k * sizeof(int));
+        for (int j = 0; j < k; j++) {
+            best->col_cover[i][j] = soln->col_cover[i][j];
+        }
+    }
+}
+
+void copySolution(solution_t* from, solution_t* to) {
+    to->fx = from->fx;
+    to->un_rows = from->un_rows;
+    to->un_cols = from->un_cols;
+    for (int i = 0; i < n; i++) {
+        to->x[i] = from->x[i];
+    }
+    for (int i = 0; i < m; i++) {
+        to->y[i] = from->y[i];
+        to->ncol_cover[i] = from->ncol_cover[i];
+        for (int j = 0; j < ncol[i]; j++) {
+            to->col_cover[i][j] = from->col_cover[i][j];
+        }
+    }
+}
+
+void replaceSet(int colidx) {
+    int currCol = -1;
+    float currCost = 0.0;
+    for (int i = 0; i < n; i++) {
+        if (i != colidx && !cpy->x[i] && !redundant(cpy, i)) {
+            float c = adaptiveCost(cpy, i);
+            if (isBetter(i, c, currCol, currCost)) {
+                currCol = i;
+                currCost = c;
+            }
+        }
+    }
+    if (currCol >= 0) {
+        addSet(cpy, currCol);
+        //printf("ADDED SET %d\n", currCol);
+    }
+}
+
 // A neighborhood = remove one subset from the solution
 // and complete it again with the Adaptive Cover Cost based
 // greedy values of the available subsets. Ofcourse, don't
-// replace a subset with itself. Apply redundancy elimination
-// when complete.
-void bestImprovement() {}
-void firstImprovement() {}
+// replace a subset with itself. When a better solution is
+// found and fi, copy it. When bi, save it and go on.
+void improve() {
+    int improvement = 1;
+    initCopy();
+    initBest();
+    while (improvement) {
+        improvement = 0;
+        for (int i = 0; i < n; i++) {
+            if (cpy->x[i]) {
+                //printf("INITAL COST: %d\n", cpy->fx);
+                removeSet(cpy, i);
+                //printf("REMOVED SET %d\n", i);
+                while (!isSolution(cpy)) {
+                    replaceSet(i);
+                }
+                //printf("COST IS NOW %d\n\n", cpy->fx);
+                if (fi) {
+                    if (cpy->fx < soln->fx) {
+                        copySolution(cpy, soln);
+                        improvement = 1;
+                    } else {
+                        copySolution(soln, cpy);
+                    }
+                } else if (bi) {
+                    if (cpy->fx < best->fx) {
+                        copySolution(cpy, best);
+                        improvement = 1;
+                    }
+                    copySolution(soln, cpy);
+                }
+            }
+        }
+        if (bi) {
+            copySolution(best, soln);
+            copySolution(soln, cpy);
+        }
+    }
+}
 
 /*** Dispatcher */
 void solve() {
-    while (!isSolution()) {
+    while (!isSolution(soln)) {
         if (ch1) {
             randomConstruction();
         } else if (ch2 || ch3 || ch4) {
@@ -565,11 +678,8 @@ void solve() {
             printf("ERROR: No constructive algorithm selected.\n");
         }
     }
-    if (bi) {
-        bestImprovement();
-    }
-    if (fi) {
-        firstImprovement();
+    if (bi || fi) {
+        improve();
     }
     if (re) {
         eliminate();
@@ -585,8 +695,8 @@ int main(int argc, char* argv[]) {
     srand(seed);
     solve();
     //diagnostics();
+    printf("%d\n", soln->fx);
     finalize();
-    printf("%d", fx);
     return 0;
 }
 

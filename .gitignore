@@ -30,3 +30,7 @@
 
 # Debug files
 *.dSYM/
+
+# R files
+.Rhistory
+.Rapp.history

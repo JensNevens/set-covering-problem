@@ -355,7 +355,11 @@ void removeSet(solution_t* sol, int colidx) {
 }
 
 /***
- 
+ Check if column newCol with cost newCost is better than
+ column currCol with cost currCost. They are better when
+ the cost is less. When the cost is equal, we look at
+ how many rows these columns cover. When this is also
+ equal, a column is chosen at random.
 **/
 int isBetter(int newCol, float newCost, int currCol, float currCost) {
     int result = 0;
@@ -426,13 +430,15 @@ void eliminate() {
     }
 }
 
-/*** Check if the current solution is a solution.
- i.e. when no rows are un-covered. */
+/***
+ Check if the current solution is a solution.
+ i.e. when no rows are un-covered. 
+**/
 int isSolution(solution_t* sol) {
     return (sol->un_rows <= 0);
 }
 
-/*** Prints diagnostic information about the solution */
+/*** Prints diagnostic information about the solution **/
 void diagnostics() {
     for (int i = 0; i < m; i++) {
         if (soln->y[i]) {
@@ -456,17 +462,20 @@ void diagnostics() {
  *************************************/
 
 /***
- Random Construction:
-  1. Pick an un-covered element
-  2. Choose a random set that covers this element */
+ Generate a random float
+**/
 float randomFloat() {
     float r = (float) rand() / (float) RAND_MAX;
     return r;
 }
 
-/*** To pick an un-covered element, make intervals of size 1/#elements,
- generate a random number in [0,1] and search for the n'th interval
- in which this random number lies. */
+/***
+ To generate a random number in a range [0,N], 
+ make intervals of size 1/N,
+ generate a random number in [0,1] 
+ and search for the x'th interval
+ in which this random number lies. 
+**/
 int pickRandom(int setSize) {
     float r = randomFloat();
     float step = (float) 1 / (float) setSize;
@@ -480,16 +489,14 @@ int pickRandom(int setSize) {
     return n;
 }
 
-/*** Select an element (using pickRandom)
-    Check if element is un-covered (using y)
-    If false, retry
-    If true, select a set that covers this element (using pickRandom)
-       Check if set us un-used (using x)
-       If false, retry
-       If true, check if this set is redundant
-           If true, retry
-           If false, add set to partial solution
- End */
+/*** 
+ Pick a random element that is not yet covered
+ Pick a random column that covers this element
+ and is also not yet covered. No need for a
+ redundancy check, since it does not cover
+ element rowidx for sure. Add the set to the
+ solution.
+**/
 void randomConstruction() {
     int rowidx = -1, colidx = -1;
     while (rowidx < 0) {
@@ -511,6 +518,11 @@ void randomConstruction() {
  Functions used by Cost Constructions
  ************************************/
 
+/***
+ Compute the adaptive cover cost based heuristic
+ by counting how many additional elements this
+ set would cover. Divide the cost by this count.
+**/
 float adaptiveCost(solution_t* sol, int colidx) {
     int covers = 0;
     for (int i = 0; i < nrow[colidx]; i++) {
@@ -521,6 +533,10 @@ float adaptiveCost(solution_t* sol, int colidx) {
     return (float) cost[colidx] / (float) covers;
 }
 
+/***
+ General method for getting the cost.
+ Computes the cost depending on the algorithm.
+**/
 float getCost(int colidx) {
     float c;
     if (ch1 || ch2) {
@@ -534,9 +550,13 @@ float getCost(int colidx) {
 }
 
 /* 
- Static cost greedy: select subset with lowest cost and add elements.
- If 2 subsets have the same cost, select the subset with the most elements in it.
- If they have the same number of elements, take one at random. */
+ For each set, if this set is not yet used and
+ it is not redundant, then get the cost of this
+ set. If the cost is less then the current best
+ set (currCol), then replace it. When going over
+ all sets, currCol contains the cheapest set.
+ Add this one to the solution.
+**/
 void costBased() {
     int currCol = -1;
     float currCost = 0.0;
@@ -557,6 +577,10 @@ void costBased() {
 /********************
  Iterative algorithms 
  *******************/
+
+/***
+ Initialize the copy of the solution struct
+**/
 void initCopy() {
     cpy = mymalloc(sizeof(solution_t));
     cpy->fx = soln->fx;
@@ -580,6 +604,9 @@ void initCopy() {
     }
 }
 
+/***
+ Initialize the best copy of the solution struct
+ **/
 void initBest() {
     best = mymalloc(sizeof(solution_t));
     best->fx = soln->fx;
@@ -603,6 +630,9 @@ void initBest() {
     }
 }
 
+/***
+ Copy a solution struct from struct 'from' to struct 'to'.
+**/
 void copySolution(solution_t* from, solution_t* to) {
     to->fx = from->fx;
     to->un_rows = from->un_rows;
@@ -619,6 +649,14 @@ void copySolution(solution_t* from, solution_t* to) {
     }
 }
 
+/***
+ Add the best possible set to the solution as long as
+ 1. it is not colidx, the set that was just removed
+ 2. it is not already used
+ 3. it is not redundant
+ The best set is determined by the adaptive cover
+ cost-based greedy heuristic.
+**/
 void replaceSet(int colidx) {
     int currCol = -1;
     float currCost = 0.0;
@@ -633,15 +671,27 @@ void replaceSet(int colidx) {
     }
     if (currCol >= 0) {
         addSet(cpy, currCol);
-        //printf("ADDED SET %d\n", currCol);
     }
 }
 
-// A neighborhood = remove one subset from the solution
-// and complete it again with the Adaptive Cover Cost based
-// greedy values of the available subsets. Ofcourse, don't
-// replace a subset with itself. When a better solution is
-// found and fi, copy it. When bi, save it and go on.
+/***
+ While improvement is found:
+ When a set is part of the solution, remove it.
+ Add new, unused sets to the solution, until it
+ is a valid solution.
+ In the case of FI: if the cost of the new struct
+ is less, then copy it to the official solution.
+ If the cost is larger, then restore the original
+ official solution.
+ In the case of BI: if the cost of the new struct
+ is less than the current best struct, then overwrite
+ the current best struct. Always restore the original
+ struct as a starting point.
+ When all sets have been tried, copy the best found
+ struct to the official solution and in the case of
+ improvement, instantiate the working copy with the
+ current best solution.
+**/
 void improve() {
     int improvement = 1;
     initCopy();
@@ -650,13 +700,10 @@ void improve() {
         improvement = 0;
         for (int i = 0; i < n; i++) {
             if (cpy->x[i]) {
-                //printf("INITAL COST: %d\n", cpy->fx);
                 removeSet(cpy, i);
-                //printf("REMOVED SET %d\n", i);
                 while (!isSolution(cpy)) {
                     replaceSet(i);
                 }
-                //printf("COST IS NOW %d\n\n", cpy->fx);
                 if (fi) {
                     if (cpy->fx < soln->fx) {
                         copySolution(cpy, soln);
@@ -675,7 +722,9 @@ void improve() {
         }
         if (bi) {
             copySolution(best, soln);
-            copySolution(soln, cpy);
+            if (improvement) {
+                copySolution(soln, cpy);
+            }
         }
     }
 }
@@ -699,7 +748,7 @@ void solve() {
     }
 }
 
-/*** Main loop */
+/*** Main **/
 int main(int argc, char* argv[]) {
     readParameters(argc, argv);
     readSCP(scp_file);

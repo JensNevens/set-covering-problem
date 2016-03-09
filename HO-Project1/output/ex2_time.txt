@@ -1,0 +1,8 @@
+ch1+fi 16
+ch1+bi 448
+ch1+re+fi 16
+ch1+re+bi 447
+ch4+fi 14
+ch4+bi 35
+ch4+re+fi 14
+ch4+re+bi 35

@@ -23,6 +23,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B45AD2AE1C90020400CA23ED /* statistics.R */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; path = statistics.R; sourceTree = "<group>"; };
+		B45AD2AF1C90025900CA23ED /* percentage */ = {isa = PBXFileReference; lastKnownFileType = folder; path = percentage; sourceTree = "<group>"; };
+		B45AD2B01C90026300CA23ED /* constructive-benefit.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "constructive-benefit.txt"; sourceTree = "<group>"; };
+		B45AD2B11C90026300CA23ED /* iterative-benefit.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "iterative-benefit.txt"; sourceTree = "<group>"; };
+		B45AD2B21C90026300CA23ED /* percentage-deviation.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "percentage-deviation.txt"; sourceTree = "<group>"; };
 		B4911E2F1C7E06DA006BBB10 /* HO-Project1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "HO-Project1"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4911E3C1C7E0CB1006BBB10 /* lsscp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lsscp.c; sourceTree = "<group>"; };
 		B4911E3F1C7E15B2006BBB10 /* lsscp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lsscp.h; sourceTree = "<group>"; };
@@ -62,6 +67,11 @@
 		B4911E311C7E06DA006BBB10 /* HO-Project1 */ = {
 			isa = PBXGroup;
 			children = (
+				B45AD2B01C90026300CA23ED /* constructive-benefit.txt */,
+				B45AD2B11C90026300CA23ED /* iterative-benefit.txt */,
+				B45AD2B21C90026300CA23ED /* percentage-deviation.txt */,
+				B45AD2AF1C90025900CA23ED /* percentage */,
+				B45AD2AE1C90020400CA23ED /* statistics.R */,
 				B4B8EB161C8B2D9400FD3B44 /* best.txt */,
 				B4B8EB151C8B2D2F00FD3B44 /* SCP-Instances */,
 				B4C5BCC01C887C3000399C98 /* output */,

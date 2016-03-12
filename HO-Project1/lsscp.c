@@ -294,7 +294,7 @@ void addSet(solution_t* sol, int colidx) {
  that is not yet covered, the set is not redundant. 
 **/
 int redundant(solution_t* sol, int colidx) {
-    int redundantBool = 1;
+    unsigned int redundantBool = 1;
     for (int i = 0; i < nrow[colidx]; i++) {
         if (!sol->y[row[colidx][i]]) {
             redundantBool = 0;
@@ -363,7 +363,7 @@ void removeSet(solution_t* sol, int colidx) {
  equal, a column is chosen at random.
 **/
 int isBetter(int newCol, float newCost, int currCol, float currCost) {
-    int result = 0;
+    unsigned int result = 0;
     if (!currCost || newCost < currCost) {
         result = 1;
     } else if (newCost == currCost) {
@@ -389,23 +389,19 @@ int isBetter(int newCol, float newCost, int currCol, float currCost) {
    then remove it.
  Repeat this process until no more sets can be removed.
 */
-int sortDesc(const void* a, const void* b) {
+int costSort(const void* a, const void* b) {
     return (cost[*(int *) b] - cost[*(int *) a]);
 }
 
-int sortAsc(const void* a, const void* b) {
-    return (cost[*(int *) a] - cost[*(int *) a]);
-}
-
 void eliminate() {
-    int redundantBool = 1;
-    int improvement = 1;
+    unsigned int redundantBool = 1;
+    unsigned int improvement = 1;
     
     int* cols = (int*) mymalloc(n * sizeof(int));
     for (int i = 0; i < n; i++) {
         cols[i] = i;
     }
-    qsort(cols, n, sizeof(int), sortDesc);
+    qsort(cols, n, sizeof(int), costSort);
     
     while (improvement) {
         improvement = 0;
@@ -515,7 +511,7 @@ void randomConstruction() {
  set would cover. Divide the cost by this count.
 **/
 float adaptiveCost(solution_t* sol, int colidx) {
-    int covers = 0;
+    unsigned int covers = 0;
     for (int i = 0; i < nrow[colidx]; i++) {
         if (!sol->y[row[colidx][i]]) {
             covers += 1;
@@ -530,7 +526,7 @@ float adaptiveCost(solution_t* sol, int colidx) {
 **/
 float getCost(int colidx) {
     float c;
-    if (ch1 || ch2) {
+    if (ch2) {
         c = cost[colidx];
     } else if (ch3) {
         c = ccost[colidx];
@@ -563,10 +559,6 @@ void costBased() {
     if (currCol >= 0) {
         addSet(soln, currCol);
     }
-}
-
-void costBased2() {
-    
 }
 
 /********************

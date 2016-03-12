@@ -23,7 +23,7 @@ for (i in files) {
 	algos <- c(algos, out.name)
 	out.filename <- paste('percentage', paste(out.name, 'txt', sep='.'), sep="/")
 	data <- read.table(paste(filepath, 'output', i, sep="/"), header=FALSE, row.names=1)
-	out.data <- data.frame(row.names=rownames(best), perct=100*((best$V2 - data$V2)/best$V2))
+	out.data <- data.frame(row.names=rownames(best), perct=100*((data$V2 - best$V2)/best$V2))
 	avg <- c(avg, mean(out.data$perct))
 	write.table(out.data, file=out.filename, quote=FALSE, col.names=FALSE)
 }

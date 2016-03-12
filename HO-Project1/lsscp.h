@@ -18,7 +18,7 @@ struct Solution {
     int* ncol_cover; // ncol_cover[i] contains number of selected columns that cover row i
     int un_rows;     // the amount of un-covered rows
     int un_cols;     // the amount of un-used columns
-} Solution;
+};
 
 typedef struct Solution solution_t;
 
@@ -38,13 +38,15 @@ int redundant(solution_t* sol, int colidx);
 void shift(solution_t* sol, int rowidx, int from);
 void removeSet(solution_t* sol, int colidx);
 int isBetter(int newCol, float newCost, int currCol, float currCost);
+int sortDesc(const void* a, const void* b);
+int sortAsc(const void* a, const void* b);
 void eliminate();
 int isSolution(solution_t* sol);
 void diagnostics();
 
 // Random Construction
 float randomFloat();
-int pickRandom(int setSize);
+unsigned int pickRandom(unsigned int min, unsigned int max);
 void RandomConstruction();
 
 // Cost Based
@@ -53,9 +55,9 @@ float getCost(int colidx);
 void costBased();
 
 // Iterative Improvement
-void initCopy();
-void initBest();
+void initCopy(solution_t* sol);
 void copySolution(solution_t* from, solution_t* to);
+void freeSolution(solution_t* sol);
 void replaceSet(int colidx);
 void improve();
 

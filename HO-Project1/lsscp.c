@@ -12,6 +12,7 @@
 /**   cols = subsets                **/
 /*************************************/
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -369,7 +370,7 @@ int isBetter(int newCol, float newCost, int currCol, float currCost) {
         if (nrow[newCol] > nrow[currCol]) {
             result = 1;
         } else if (nrow[newCol] == nrow[currCol]) {
-            if (pickRandom(2)) {
+            if (pickRandom(0,1)) {
                 result = 1;
             }
         }
@@ -378,34 +379,43 @@ int isBetter(int newCol, float newCost, int currCol, float currCost) {
 }
 
 /***
- Continue looping until you can no longer find a redundant set.
- Consider only a set when it is selected.
- A set is redundant until proven otherwise.
- Double for-loop = look for each element at all sets covering that element
- If set I covers element J and it is the only one
- Then set I is no longer redundant
- If you managed to go through all elements J and
- the set I is still redundant; store its idx and cost
- but only if the cost of this redundant set is
- higher than the already found redundant set (if present)
- If a redundant set with highest cost is found
- remove it and repeat the process
+ Sort all sets based on their cost.
+ Loop through all sets:
+   Only consider a set when it is in the partial solution
+   Consider a set to be redundant, until proven otherwise
+   A set is not redundant when it is the only set covering
+     a particular element.
+   When going through all elements and the set is still redundant,
+   then remove it.
+ Repeat this process until no more sets can be removed.
 */
+int sortDesc(const void* a, const void* b) {
+    return (cost[*(int *) b] - cost[*(int *) a]);
+}
+
+int sortAsc(const void* a, const void* b) {
+    return (cost[*(int *) a] - cost[*(int *) a]);
+}
+
 void eliminate() {
-    int removed = 1;
-    int currCol = -1;
-    float currCost = 0.0;
     int redundantBool = 1;
-    while (removed) {
-        removed = 0;
-        currCol = -1;
-        currCost = 0;
+    int improvement = 1;
+    
+    int* cols = (int*) mymalloc(n * sizeof(int));
+    for (int i = 0; i < n; i++) {
+        cols[i] = i;
+    }
+    qsort(cols, n, sizeof(int), sortDesc);
+    
+    while (improvement) {
+        improvement = 0;
         for (int i = 0; i < n; i++) {
-            if (soln->x[i]) {
+            int currCol = cols[i];
+            if (soln->x[currCol]) {
                 redundantBool = 1;
                 for (int j = 0; j < m; j++) {
                     for (int k = 0; k < soln->ncol_cover[j]; k++) {
-                        if (soln->col_cover[j][k] == i && soln->ncol_cover[j] <= 1) {
+                        if (soln->col_cover[j][k] == currCol && soln->ncol_cover[j] <= 1) {
                             redundantBool = 0;
                             break;
                         }
@@ -415,17 +425,10 @@ void eliminate() {
                     }
                 }
                 if (redundantBool) {
-                    float newCost = getCost(i);
-                    if (isBetter(i, newCost, currCol, currCost)) {
-                        currCol = i;
-                        currCost = newCost;
-                    }
+                    removeSet(soln, currCol);
+                    improvement = 1;
                 }
             }
-        }
-        if (currCol >= 0) {
-            removeSet(soln, currCol);
-            removed = 1;
         }
     }
 }
@@ -461,32 +464,20 @@ void diagnostics() {
  Functions used by Random Construction
  *************************************/
 
-/***
- Generate a random float
-**/
-float randomFloat() {
-    float r = (float) rand() / (float) RAND_MAX;
-    return r;
-}
-
-/***
- To generate a random number in a range [0,N], 
- make intervals of size 1/N,
- generate a random number in [0,1] 
- and search for the x'th interval
- in which this random number lies. 
-**/
-int pickRandom(int setSize) {
-    float r = randomFloat();
-    float step = (float) 1 / (float) setSize;
-    int n;
-    for (int i = 0; i < setSize; i++) {
-        if (r <= (i+1)*step) {
-            n = i;
-            break;
-        }
-    }
-    return n;
+unsigned int pickRandom(unsigned int min, unsigned int max) {
+    int r;
+    const unsigned int range = 1 + max - min;
+    const unsigned int buckets = RAND_MAX / range;
+    const unsigned int limit = buckets * range;
+    
+    /* Create equal size buckets all in a row, then fire randomly towards
+     * the buckets until you land in one of them. All buckets are equally
+     * likely. If you land off the end of the line of buckets, try again. */
+    do {
+        r = rand();
+    } while (r >= limit);
+    
+    return min + (r / buckets);
 }
 
 /*** 
@@ -500,13 +491,13 @@ int pickRandom(int setSize) {
 void randomConstruction() {
     int rowidx = -1, colidx = -1;
     while (rowidx < 0) {
-        int idx = pickRandom(m);
+        int idx = pickRandom(0,m-1);
         if (!soln->y[idx]) {
             rowidx = idx;
         }
     }
     while (colidx < 0) {
-        int idx = pickRandom(ncol[rowidx]);
+        int idx = pickRandom(0,ncol[rowidx]-1);
         if (!soln->x[col[rowidx][idx]]) {
             colidx = col[rowidx][idx];
         }
@@ -574,6 +565,10 @@ void costBased() {
     }
 }
 
+void costBased2() {
+    
+}
+
 /********************
  Iterative algorithms 
  *******************/
@@ -581,51 +576,24 @@ void costBased() {
 /***
  Initialize the copy of the solution struct
 **/
-void initCopy() {
-    cpy = mymalloc(sizeof(solution_t));
-    cpy->fx = soln->fx;
-    cpy->un_rows = soln->un_rows;
-    cpy->un_cols = soln->un_cols;
-    cpy->x = (int*) mymalloc(n * sizeof(int));
-    cpy->y = (int*) mymalloc(m * sizeof(int));
-    cpy->col_cover = (int**) mymalloc(m * sizeof(int *));
-    cpy->ncol_cover = (int*) mymalloc(m * sizeof(int));
+void initCopy(solution_t* sol) {
+    sol->fx = soln->fx;
+    sol->un_rows = soln->un_rows;
+    sol->un_cols = soln->un_cols;
+    sol->x = (int*) mymalloc(n * sizeof(int));
+    sol->y = (int*) mymalloc(m * sizeof(int));
+    sol->col_cover = (int**) mymalloc(m * sizeof(int *));
+    sol->ncol_cover = (int*) mymalloc(m * sizeof(int));
     for (int i = 0; i < n; i++) {
-        cpy->x[i] = soln->x[i];
+        sol->x[i] = soln->x[i];
     }
     for (int i = 0; i < m; i++) {
-        cpy->y[i] = soln->y[i];
-        cpy->ncol_cover[i] = soln->ncol_cover[i];
+        sol->y[i] = soln->y[i];
+        sol->ncol_cover[i] = soln->ncol_cover[i];
         int k = ncol[i];
-        cpy->col_cover[i] = (int*) mymalloc(k * sizeof(int));
+        sol->col_cover[i] = (int*) mymalloc(k * sizeof(int));
         for (int j = 0; j < k; j++) {
-            cpy->col_cover[i][j] = soln->col_cover[i][j];
-        }
-    }
-}
-
-/***
- Initialize the best copy of the solution struct
- **/
-void initBest() {
-    best = mymalloc(sizeof(solution_t));
-    best->fx = soln->fx;
-    best->un_rows = soln->un_rows;
-    best->un_cols = soln->un_cols;
-    best->x = (int*) mymalloc(n * sizeof(int));
-    best->y = (int*) mymalloc(m * sizeof(int));
-    best->col_cover = (int**) mymalloc(m * sizeof(int *));
-    best->ncol_cover = (int*) mymalloc(m * sizeof(int));
-    for (int i = 0; i < n; i++) {
-        best->x[i] = soln->x[i];
-    }
-    for (int i = 0; i < m; i++) {
-        best->y[i] = soln->y[i];
-        best->ncol_cover[i] = soln->ncol_cover[i];
-        int k = ncol[i];
-        best->col_cover[i] = (int*) mymalloc(k * sizeof(int));
-        for (int j = 0; j < k; j++) {
-            best->col_cover[i][j] = soln->col_cover[i][j];
+            sol->col_cover[i][j] = soln->col_cover[i][j];
         }
     }
 }
@@ -647,6 +615,16 @@ void copySolution(solution_t* from, solution_t* to) {
             to->col_cover[i][j] = from->col_cover[i][j];
         }
     }
+}
+
+/***
+ Free a solution struct
+**/
+void freeSolution(solution_t* sol) {
+    free((void*) sol->x);
+    free((void*) sol->y);
+    free((void**) sol->col_cover);
+    free((void*) sol->ncol_cover);
 }
 
 /***
@@ -694,8 +672,12 @@ void replaceSet(int colidx) {
 **/
 void improve() {
     int improvement = 1;
-    initCopy();
-    initBest();
+    cpy = (solution_t*) mymalloc(sizeof(solution_t));
+    initCopy(cpy);
+    if (bi) {
+        best = (solution_t*) mymalloc(sizeof(solution_t));
+        initCopy(best);
+    }
     while (improvement) {
         improvement = 0;
         for (int i = 0; i < n; i++) {

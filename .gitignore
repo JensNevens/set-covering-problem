@@ -34,3 +34,6 @@
 # R files
 .Rhistory
 .Rapp.history
+
+# XCode Project
+*.xcodeproj

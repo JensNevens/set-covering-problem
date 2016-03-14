@@ -63,7 +63,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--seed 1234567"
+            argument = "--seed 30"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

@@ -22,6 +22,15 @@ struct Solution {
 
 typedef struct Solution solution_t;
 
+struct Best {
+    int removed;
+    int* added;
+    int addedPtr;
+    int fx;
+};
+
+typedef struct Best best_t;
+
 // General functions
 void usage();
 void readParameters(int argc, char* argv[]);
@@ -44,9 +53,8 @@ int isSolution(solution_t* sol);
 void diagnostics();
 
 // Random Construction
-float randomFloat();
 unsigned int pickRandom(unsigned int min, unsigned int max);
-void RandomConstruction();
+void randomConstruction();
 
 // Cost Based
 float adaptiveCost(solution_t* sol, int colidx);
@@ -57,8 +65,11 @@ void costBased();
 void initCopy(solution_t* sol);
 void copySolution(solution_t* from, solution_t* to);
 void freeSolution(solution_t* sol);
-void replaceSet(int colidx);
-void improve();
+int replaceSet(int colidx);
+void initBest(best_t* best);
+void applyBest(solution_t* sol);
+void bestImprove();
+void firstImprove();
 
 // Main
 void solve();

@@ -46,7 +46,7 @@ float* ccost;     // ccost[i] contains static cover cost of column i
  ****************/
 solution_t* soln; // main solution struct
 solution_t* cpy;  // copy of solution, used by iterative improvement
-solution_t* best; // copy of solution, placeholder for best improvement
+best_t* best; // copy of solution, placeholder for best improvement
 
 void usage() {
     printf("\nUSAGE: lsscp [param_name, param_value] [options]...\n");
@@ -370,9 +370,7 @@ int isBetter(int newCol, float newCost, int currCol, float currCost) {
         if (nrow[newCol] > nrow[currCol]) {
             result = 1;
         } else if (nrow[newCol] == nrow[currCol]) {
-            if (pickRandom(0,1)) {
-                result = 1;
-            }
+            result = 1;
         }
     }
     return result;
@@ -627,7 +625,7 @@ void freeSolution(solution_t* sol) {
  The best set is determined by the adaptive cover
  cost-based greedy heuristic.
 **/
-void replaceSet(int colidx) {
+int replaceSet(int colidx) {
     int currCol = -1;
     float currCost = 0.0;
     for (int i = 0; i < n; i++) {
@@ -642,34 +640,74 @@ void replaceSet(int colidx) {
     if (currCol >= 0) {
         addSet(cpy, currCol);
     }
+    return currCol;
 }
 
-/***
- While improvement is found:
- When a set is part of the solution, remove it.
- Add new, unused sets to the solution, until it
- is a valid solution.
- In the case of FI: if the cost of the new struct
- is less, then copy it to the official solution.
- If the cost is larger, then restore the original
- official solution.
- In the case of BI: if the cost of the new struct
- is less than the current best struct, then overwrite
- the current best struct. Always restore the original
- struct as a starting point.
- When all sets have been tried, copy the best found
- struct to the official solution and in the case of
- improvement, instantiate the working copy with the
- current best solution.
-**/
-void improve() {
+void initBest(best_t* best) {
+    best->removed = -1;
+    best->added = (int*) mymalloc(n * sizeof(int));
+    best->addedPtr = 0;
+    best->fx = soln->fx;
+}
+
+void applyBest(solution_t* sol) {
+    for (int i = 0; i < best->addedPtr; i++) {
+        addSet(sol, best->added[i]);
+    }
+    removeSet(sol, best->removed);
+}
+
+void bestImprove() {
+    int improvement = 1;
+    int* added = mymalloc(n * sizeof(int));
+    int addedPtr = 0;
+    
+    cpy = (solution_t*) mymalloc(sizeof(solution_t));
+    best = (best_t*) mymalloc(sizeof(best_t));
+    initCopy(cpy);
+    initBest(best);
+    
+    while (improvement) {
+        improvement = 0;
+        for (int i = 0; i < n; i++) {
+            if (cpy->x[i]) {
+                removeSet(cpy, i);
+                while (!isSolution(cpy)) {
+                    int col = replaceSet(i);
+                    if (col >= 0) {
+                        added[addedPtr] = col;
+                        addedPtr += 1;
+                    }
+                }
+                if (cpy->fx < best->fx) {
+                    improvement = 1;
+                    best->fx = cpy->fx;
+                    best->removed = i;
+                    if (addedPtr > 0) {
+                        for (int j = 0; j < addedPtr; j++) {
+                            best->added[best->addedPtr] = added[j];
+                            best->addedPtr += 1;
+                        }
+                    }
+                }
+                copySolution(soln, cpy);
+                addedPtr = 0;
+                best->addedPtr = 0;
+            }
+        }
+        if (improvement) {
+            applyBest(soln);
+            copySolution(soln, cpy);
+            best->removed = -1;
+            best->addedPtr = 0;
+        }
+    }
+}
+
+void firstImprove() {
     int improvement = 1;
     cpy = (solution_t*) mymalloc(sizeof(solution_t));
     initCopy(cpy);
-    if (bi) {
-        best = (solution_t*) mymalloc(sizeof(solution_t));
-        initCopy(best);
-    }
     while (improvement) {
         improvement = 0;
         for (int i = 0; i < n; i++) {
@@ -678,26 +716,12 @@ void improve() {
                 while (!isSolution(cpy)) {
                     replaceSet(i);
                 }
-                if (fi) {
-                    if (cpy->fx < soln->fx) {
-                        copySolution(cpy, soln);
-                        improvement = 1;
-                    } else {
-                        copySolution(soln, cpy);
-                    }
-                } else if (bi) {
-                    if (cpy->fx < best->fx) {
-                        copySolution(cpy, best);
-                        improvement = 1;
-                    }
+                if (cpy->fx < soln->fx) {
+                    copySolution(cpy, soln);
+                    improvement = 1;
+                } else {
                     copySolution(soln, cpy);
                 }
-            }
-        }
-        if (bi) {
-            copySolution(best, soln);
-            if (improvement) {
-                copySolution(soln, cpy);
             }
         }
     }
@@ -710,12 +734,13 @@ void solve() {
             randomConstruction();
         } else if (ch2 || ch3 || ch4) {
             costBased();
-        } else {
-            printf("ERROR: No constructive algorithm selected.\n");
         }
     }
-    if (bi || fi) {
-        improve();
+    if (fi) {
+        firstImprove();
+    }
+    if (bi) {
+        bestImprove();
     }
     if (re) {
         eliminate();

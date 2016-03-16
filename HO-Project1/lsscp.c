@@ -748,7 +748,7 @@ void solve() {
     if (bi) {
         bestImprove();
     }
-    if (re) {
+    if ((ch1 || ch2 || ch3 || ch4) && re) {
         eliminate();
     }
 }

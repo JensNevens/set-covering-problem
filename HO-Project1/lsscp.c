@@ -697,6 +697,9 @@ void bestImprove() {
         }
         if (improvement) {
             applyBest(soln);
+            if (re) {
+                eliminate();
+            }
             copySolution(soln, cpy);
             best->removed = -1;
             best->addedPtr = 0;
@@ -719,6 +722,9 @@ void firstImprove() {
                 if (cpy->fx < soln->fx) {
                     copySolution(cpy, soln);
                     improvement = 1;
+                    if (re) {
+                        eliminate();
+                    }
                 } else {
                     copySolution(soln, cpy);
                 }

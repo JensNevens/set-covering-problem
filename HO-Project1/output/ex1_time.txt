@@ -3,6 +3,6 @@ ch1+re 2
 ch2 3
 ch2+re 3
 ch3 4
-ch3+re 4
-ch4 6
-ch4+re 6
+ch3+re 3
+ch4 4
+ch4+re 5

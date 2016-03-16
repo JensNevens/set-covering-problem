@@ -572,7 +572,7 @@ void initCopy(solution_t* sol) {
     sol->un_cols = soln->un_cols;
     sol->x = (int*) mymalloc(n * sizeof(int));
     sol->y = (int*) mymalloc(m * sizeof(int));
-    sol->col_cover = (int**) mymalloc(m * sizeof(int *));
+    sol->col_cover = (int**) mymalloc(m * sizeof(int*));
     sol->ncol_cover = (int*) mymalloc(m * sizeof(int));
     for (int i = 0; i < n; i++) {
         sol->x[i] = soln->x[i];
@@ -684,6 +684,7 @@ void bestImprove() {
                     best->fx = cpy->fx;
                     best->removed = i;
                     if (addedPtr > 0) {
+                        best->addedPtr = 0;
                         for (int j = 0; j < addedPtr; j++) {
                             best->added[best->addedPtr] = added[j];
                             best->addedPtr += 1;
@@ -692,7 +693,6 @@ void bestImprove() {
                 }
                 copySolution(soln, cpy);
                 addedPtr = 0;
-                best->addedPtr = 0;
             }
         }
         if (improvement) {
@@ -752,10 +752,8 @@ int main(int argc, char* argv[]) {
     readParameters(argc, argv);
     readSCP(scp_file);
     initialize();
-    //printInstance(0);
     srand(seed);
     solve();
-    //diagnostics();
     printf("%d\n", soln->fx);
     finalize();
     return 0;

@@ -82,6 +82,3 @@ for (i in c('ch1', 'ch4')) {
 iter.benefit <- data.frame(row.names=algos, benefits=iter.benefits)
 write.table(iter.benefit, file='iterative-benefit.txt', quote=FALSE, col.names=FALSE)
 
-
-
-

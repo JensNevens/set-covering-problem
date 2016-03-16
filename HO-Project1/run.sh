@@ -4,7 +4,7 @@
 # $2 is path of folder with instances
 # $3 is path of folder to save results
 
-seed=30
+seed=123456789
 
 #Remove old files
 for f in "$3"/*.txt

@@ -1,6 +1,6 @@
 ##
 ##
-## HO-Project 1
+## HO-Project Statistics
 ## Created by Jens Nevens on 05/03/16.
 ## Copyright © 2016 Jens Nevens. All rights reserved.
 ##

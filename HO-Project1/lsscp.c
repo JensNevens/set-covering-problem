@@ -407,7 +407,14 @@ void eliminate() {
             int currCol = cols[i];
             if (soln->x[currCol]) {
                 redundantBool = 1;
-                for (int j = 0; j < m; j++) {
+                for (int j = 0; j < nrow[currCol]; j++) {
+                    int elem = row[currCol][j];
+                    if (soln->ncol_cover[elem] <= 1) {
+                        redundantBool = 0;
+                        break;
+                    }
+                }
+                /*for (int j = 0; j < m; j++) {
                     for (int k = 0; k < soln->ncol_cover[j]; k++) {
                         if (soln->col_cover[j][k] == currCol && soln->ncol_cover[j] <= 1) {
                             redundantBool = 0;
@@ -417,7 +424,7 @@ void eliminate() {
                     if (!redundantBool) {
                         break;
                     }
-                }
+                }*/
                 if (redundantBool) {
                     removeSet(soln, currCol);
                     improvement = 1;
@@ -742,14 +749,14 @@ void solve() {
             costBased();
         }
     }
+    if ((ch1 || ch2 || ch3 || ch4) && re) {
+        eliminate();
+    }
     if (fi) {
         firstImprove();
     }
     if (bi) {
         bestImprove();
-    }
-    if ((ch1 || ch2 || ch3 || ch4) && re) {
-        eliminate();
     }
 }
 
@@ -760,6 +767,7 @@ int main(int argc, char* argv[]) {
     initialize();
     srand(seed);
     solve();
+    //diagnostics();
     printf("%d\n", soln->fx);
     finalize();
     return 0;

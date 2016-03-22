@@ -53,6 +53,33 @@ for (i in c('ch1','ch2','ch3','ch4')) {
 const.benefit <- data.frame(row.names=algos, benefits=const.benefits)
 write.table(const.benefit, file='constructive-benefit.txt', quote=FALSE, col.names=FALSE)
 
+## Compute the amount of benefit from the redundancy elimination
+algos <- c()
+benefit.mins <- c()
+benefit.maxs <- c()
+benefit.means <- c()
+
+for (i in c('ch1','ch2','ch3','ch4')) {
+	file1 <- paste(i, '.txt', sep='')
+	file2 <- paste(i, '+re', '.txt', sep='')
+	data1 <- read.table(paste(filepath, 'output', file1, sep='/'), header=FALSE, row.names=1)
+	data2 <- read.table(paste(filepath, 'output', file2, sep='/'), header=FALSE, row.names=1)
+
+	out.data <- data.frame(row.names=rownames(data1), diff=(data1$V2 - data2$V2))
+	benefit.min <- min(out.data$diff)
+	benefit.max <- max(out.data$diff)
+	benefit.mean <- mean(out.data$diff)
+
+	algos <- c(algos, i)
+	benefit.mins <- c(benefit.mins, benefit.min)
+	benefit.maxs <- c(benefit.maxs, benefit.max)
+	benefit.means <- c(benefit.means, benefit.mean)
+}
+
+const.benefit <- data.frame(row.names=algos, mins=benefit.mins, maxs=benefit.maxs, means=benefit.means)
+write.table(const.benefit, file='benefit-data.txt', quote=FALSE, col.names=FALSE)
+
+
 ## Compute the fraction of instances that benefits from
 ## iterative improvement
 algos <- c()

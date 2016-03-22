@@ -414,17 +414,6 @@ void eliminate() {
                         break;
                     }
                 }
-                /*for (int j = 0; j < m; j++) {
-                    for (int k = 0; k < soln->ncol_cover[j]; k++) {
-                        if (soln->col_cover[j][k] == currCol && soln->ncol_cover[j] <= 1) {
-                            redundantBool = 0;
-                            break;
-                        }
-                    }
-                    if (!redundantBool) {
-                        break;
-                    }
-                }*/
                 if (redundantBool) {
                     removeSet(soln, currCol);
                     improvement = 1;
@@ -749,7 +738,7 @@ void solve() {
             costBased();
         }
     }
-    if ((ch1 || ch2 || ch3 || ch4) && re) {
+    if (re) {
         eliminate();
     }
     if (fi) {

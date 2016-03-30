@@ -29,4 +29,4 @@ for (i in files) {
 	}
 }
 
-write.table(output, file='ttest.txt', quote=FALSE)
+write.table(output, file='output/ttest.txt', quote=FALSE)

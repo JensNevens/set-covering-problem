@@ -29,7 +29,7 @@ for (i in files) {
 }
 
 avg.deviation <- data.frame(row.names=algos, avg=avg)
-write.table(avg.deviation, file='percentage-deviation.txt', quote=FALSE, col.names=FALSE)
+write.table(avg.deviation, file='output/percentage-deviation.txt', quote=FALSE, col.names=FALSE)
 
 
 ## Compute the fraction of instances that benefits from
@@ -51,7 +51,7 @@ for (i in c('ch1','ch2','ch3','ch4')) {
 }
 
 const.benefit <- data.frame(row.names=algos, benefits=const.benefits)
-write.table(const.benefit, file='constructive-benefit.txt', quote=FALSE, col.names=FALSE)
+write.table(const.benefit, file='output/constructive-benefit.txt', quote=FALSE, col.names=FALSE)
 
 ## Compute the amount of benefit from the redundancy elimination
 algos <- c()
@@ -79,7 +79,7 @@ for (i in c('ch1','ch2','ch3','ch4')) {
 }
 
 const.benefit <- data.frame(row.names=algos, mins=benefit.mins, maxs=benefit.maxs, means=benefit.means)
-write.table(const.benefit, file='benefit-data.txt', quote=FALSE, col.names=FALSE)
+write.table(const.benefit, file='output/benefit-data.txt', quote=FALSE, col.names=FALSE)
 
 
 ## Compute the fraction of instances that benefits from
@@ -109,5 +109,5 @@ for (i in c('ch1', 'ch4')) {
 }
 
 iter.benefit <- data.frame(row.names=algos, benefits=iter.benefits)
-write.table(iter.benefit, file='iterative-benefit.txt', quote=FALSE, col.names=FALSE)
+write.table(iter.benefit, file='output/iterative-benefit.txt', quote=FALSE, col.names=FALSE)
 

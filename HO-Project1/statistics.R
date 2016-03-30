@@ -38,12 +38,12 @@ algos <- c()
 const.benefits <- c()
 
 for (i in c('ch1','ch2','ch3','ch4')) {
-	file1 <- paste(i, '.txt', sep='')
-	file2 <- paste(i, '+re', '.txt', sep='')
-	data1 <- read.table(paste(filepath, 'output', file1, sep='/'), header=FALSE, row.names=1)
-	data2 <- read.table(paste(filepath, 'output', file2, sep='/'), header=FALSE, row.names=1)
+	a.file <- paste(i, '.txt', sep='')
+	b.file <- paste(i, '+re', '.txt', sep='')
+	a.data <- read.table(paste(filepath, 'output', a.file, sep='/'), header=FALSE, row.names=1)
+	b.data <- read.table(paste(filepath, 'output', b.file, sep='/'), header=FALSE, row.names=1)
 
-	out.data <- data.frame(row.names=rownames(data1), benefit=(data2$V2 < data1$V2))
+	out.data <- data.frame(row.names=rownames(a.data), benefit=(b.data$V2 < a.data$V2))
 	fraction <- sum(out.data$benefit) / nrow(out.data)
 
 	algos <- c(algos, i)
@@ -60,15 +60,17 @@ benefit.maxs <- c()
 benefit.means <- c()
 
 for (i in c('ch1','ch2','ch3','ch4')) {
-	file1 <- paste(i, '.txt', sep='')
-	file2 <- paste(i, '+re', '.txt', sep='')
-	data1 <- read.table(paste(filepath, 'output', file1, sep='/'), header=FALSE, row.names=1)
-	data2 <- read.table(paste(filepath, 'output', file2, sep='/'), header=FALSE, row.names=1)
+	a.file <- paste(i, '.txt', sep='')
+	b.file <- paste(i, '+re', '.txt', sep='')
+	a.data <- read.table(paste(filepath, 'output', a.file, sep='/'), header=FALSE, row.names=1)
+	b.data <- read.table(paste(filepath, 'output', b.file, sep='/'), header=FALSE, row.names=1)
 
-	out.data <- data.frame(row.names=rownames(data1), diff=(data1$V2 - data2$V2))
-	benefit.min <- min(out.data$diff)
-	benefit.max <- max(out.data$diff)
-	benefit.mean <- mean(out.data$diff)
+	a.diff <- 100*((a.data$V2 - best$V2)/best$V2)
+	b.diff <- 100*((b.data$V2 - best$V2)/best$V2)
+	out.data <- a.diff - b.diff
+	benefit.min <- min(out.data)
+	benefit.max <- max(out.data)
+	benefit.mean <- mean(out.data)
 
 	algos <- c(algos, i)
 	benefit.mins <- c(benefit.mins, benefit.min)
@@ -87,22 +89,22 @@ iter.benefits <- c()
 
 for (i in c('ch1', 'ch4')) {
 	for (j in c('', '+re')) {
-		file1 <- paste(i, j, '+bi', '.txt', sep='')
-		file2 <- paste(i, j, '+fi', '.txt', sep='')
-		file3 <- paste(i, j, '.txt', sep='')
+		a.file <- paste(i, j, '+bi', '.txt', sep='')
+		b.file <- paste(i, j, '+fi', '.txt', sep='')
+		c.file <- paste(i, j, '.txt', sep='')
 		
-		data1 <- read.table(paste(filepath, 'output', file1, sep='/'), header=FALSE, row.names=1)
-		data2 <- read.table(paste(filepath, 'output', file2, sep='/'), header=FALSE, row.names=1)
-		data3 <- read.table(paste(filepath, 'output', file3, sep='/'), header=FALSE, row.names=1)
+		a.data <- read.table(paste(filepath, 'output', a.file, sep='/'), header=FALSE, row.names=1)
+		b.data <- read.table(paste(filepath, 'output', b.file, sep='/'), header=FALSE, row.names=1)
+		c.data <- read.table(paste(filepath, 'output', c.file, sep='/'), header=FALSE, row.names=1)
 
-		out.data1 <- data.frame(row.names=rownames(data3), benefit=(data1$V2 < data3$V2))
-		out.data2 <- data.frame(row.names=rownames(data3), benefit=(data2$V2 < data3$V2))
+		a.out.data <- data.frame(row.names=rownames(c.data), benefit=(a.data$V2 < c.data$V2))
+		b.out.data <- data.frame(row.names=rownames(c.data), benefit=(b.data$V2 < c.data$V2))
 
-		fraction1 <- sum(out.data1$benefit) / nrow(out.data1)
-		fraction2 <- sum(out.data2$benefit) / nrow(out.data2)
+		a.fraction <- sum(a.out.data$benefit) / nrow(a.out.data)
+		b.fraction <- sum(b.out.data$benefit) / nrow(b.out.data)
 
 		algos <- c(algos, paste(i,j,'+bi',sep=''), paste(i,j,'+fi',sep=''))
-		iter.benefits <- c(iter.benefits, fraction1, fraction2)
+		iter.benefits <- c(iter.benefits, a.fraction, b.fraction)
 	}
 }
 

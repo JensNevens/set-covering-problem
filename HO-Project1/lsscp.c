@@ -738,14 +738,14 @@ void solve() {
             costBased();
         }
     }
-    if (re) {
-        eliminate();
-    }
     if (fi) {
         firstImprove();
     }
     if (bi) {
         bestImprove();
+    }
+    if (re) {
+        eliminate();
     }
 }
 

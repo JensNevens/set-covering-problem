@@ -1,8 +1,8 @@
-ch1+fi 17
-ch1+bi 393
-ch1+re+fi 20
-ch1+re+bi 234
+ch1+fi 16
+ch1+bi 404
+ch1+re+fi 18
+ch1+re+bi 232
 ch4+fi 14
-ch4+bi 31
-ch4+re+fi 11
+ch4+bi 32
+ch4+re+fi 10
 ch4+re+bi 11

@@ -9,6 +9,20 @@
 #ifndef lsscp_h
 #define lsscp_h
 
+// Instance struct
+struct Instance {
+    int m;        // number of rows
+    int n;        // number of columns
+    int** row;    // row[i] contains rows that are covered by column i
+    int** col;    // col[i] contains columns that cover row i
+    int* nrow;    // ncol[i] contains number of columns that cover row i
+    int* ncol;    // nrow[i] contains number of rows that are covered by column i
+    int* cost;    // cost[i] contains cost of column i
+    float* ccost; // ccost[i] contains static cover cost of column i
+};
+
+typedef struct Instance instance_t;
+
 // Solution struct
 struct Solution {
     int* x;          // x[i] 0,1 if column i is selected
@@ -35,41 +49,40 @@ typedef struct Best best_t;
 void usage();
 void readParameters(int argc, char* argv[]);
 void readSCP(char* filename);
-void printInstance(int level);
 void initialize();
-void* mymalloc(size_t size);
 void errorExit(char* text);
 void finalize();
-
-// Functions needed by all algorithms
-void addSet(solution_t* sol, int colidx);
-int redundant(solution_t* sol, int colidx);
-void shift(solution_t* sol, int rowidx, int from);
-void removeSet(solution_t* sol, int colidx);
-int isBetter(int newCol, float newCost, int currCol, float currCost);
-int costSort(const void* a, const void* b);
-void eliminate();
-int isSolution(solution_t* sol);
 void diagnostics();
+void* mymalloc(size_t size);
 
-// Random Construction
+// Helper functions
+void addSet(instance_t* inst, solution_t* sol, int colidx);
+int redundant(instance_t* inst, solution_t* sol, int colidx);
+void shift(solution_t* sol, int rowidx, int from);
+void removeSet(instance_t* inst, solution_t* sol, int colidx);
+int isBetter(instance_t* inst, int newCol, float newCost, int currCol, float currCost);
+int costSort(const void* a, const void* b);
+void eliminate(instance_t* inst, solution_t* sol);
+int isSolution(solution_t* sol);
+
+// Constructive functions
+//// Random Construction
 unsigned int pickRandom(unsigned int min, unsigned int max);
-void randomConstruction();
+void randomConstruction(instance_t* inst, solution_t* sol);
+//// Cost Based
+float adaptiveCost(instance_t* inst, solution_t* sol, int colidx);
+float getCost(instance_t* inst, solution_t* sol, int colidx);
+void costBased(instance_t* inst, solution_t* sol);
 
-// Cost Based
-float adaptiveCost(solution_t* sol, int colidx);
-float getCost(int colidx);
-void costBased();
-
-// Iterative Improvement
-void initCopy(solution_t* sol);
-void copySolution(solution_t* from, solution_t* to);
+// Improvement functions
+void initCopy(instance_t* inst, solution_t* sol, solution_t* new);
+void copySolution(instance_t* inst, solution_t* from, solution_t* to);
 void freeSolution(solution_t* sol);
-int replaceSet(int colidx);
-void initBest(best_t* best);
-void applyBest(solution_t* sol);
-void bestImprove();
-void firstImprove();
+int replaceSet(instance_t* inst, int colidx);
+void initBest(instance_t* inst, solution_t* sol, best_t* best);
+void applyBest(instance_t* inst, solution_t* sol, best_t* best);
+void bestImprove(instance_t* inst, solution_t* sol);
+void firstImprove(instance_t* inst, solution_t* sol);
 
 // Main
 void solve();

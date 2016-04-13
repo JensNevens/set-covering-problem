@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		B4911E3D1C7E0CB1006BBB10 /* lsscp.c in Sources */ = {isa = PBXBuildFile; fileRef = B4911E3C1C7E0CB1006BBB10 /* lsscp.c */; };
+		B4EEB6CC1CBE69CF00427FBE /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = B4EEB6CA1CBE69CF00427FBE /* utils.c */; };
+		B4EEB6CF1CBE6B2700427FBE /* constructive.c in Sources */ = {isa = PBXBuildFile; fileRef = B4EEB6CD1CBE6B2700427FBE /* constructive.c */; };
+		B4EEB6D21CBE6C5400427FBE /* iterative.c in Sources */ = {isa = PBXBuildFile; fileRef = B4EEB6D01CBE6C5400427FBE /* iterative.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +34,13 @@
 		B4B8EB161C8B2D9400FD3B44 /* best.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = best.txt; path = ../../best.txt; sourceTree = "<group>"; };
 		B4C5BCBF1C887ABE00399C98 /* run.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = run.sh; sourceTree = "<group>"; };
 		B4C5BCC01C887C3000399C98 /* output */ = {isa = PBXFileReference; lastKnownFileType = folder; path = output; sourceTree = "<group>"; };
+		B4EEB6C91CBE688A00427FBE /* data.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = data.h; sourceTree = "<group>"; };
+		B4EEB6CA1CBE69CF00427FBE /* utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
+		B4EEB6CB1CBE69CF00427FBE /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
+		B4EEB6CD1CBE6B2700427FBE /* constructive.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = constructive.c; sourceTree = "<group>"; };
+		B4EEB6CE1CBE6B2700427FBE /* constructive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = constructive.h; sourceTree = "<group>"; };
+		B4EEB6D01CBE6C5400427FBE /* iterative.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = iterative.c; sourceTree = "<group>"; };
+		B4EEB6D11CBE6C5400427FBE /* iterative.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iterative.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +80,13 @@
 				B4C5BCBF1C887ABE00399C98 /* run.sh */,
 				B4911E3C1C7E0CB1006BBB10 /* lsscp.c */,
 				B4911E3F1C7E15B2006BBB10 /* lsscp.h */,
+				B4EEB6D01CBE6C5400427FBE /* iterative.c */,
+				B4EEB6D11CBE6C5400427FBE /* iterative.h */,
+				B4EEB6CD1CBE6B2700427FBE /* constructive.c */,
+				B4EEB6CE1CBE6B2700427FBE /* constructive.h */,
+				B4EEB6CA1CBE69CF00427FBE /* utils.c */,
+				B4EEB6CB1CBE69CF00427FBE /* utils.h */,
+				B4EEB6C91CBE688A00427FBE /* data.h */,
 			);
 			path = "HO-Project1";
 			sourceTree = "<group>";
@@ -131,6 +148,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				B4911E3D1C7E0CB1006BBB10 /* lsscp.c in Sources */,
+				B4EEB6D21CBE6C5400427FBE /* iterative.c in Sources */,
+				B4EEB6CF1CBE6B2700427FBE /* constructive.c in Sources */,
+				B4EEB6CC1CBE69CF00427FBE /* utils.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,5 +1,5 @@
 ch1 2
-ch1+re 1
+ch1+re 2
 ch2 3
 ch2+re 3
 ch3 3

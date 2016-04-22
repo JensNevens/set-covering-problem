@@ -317,7 +317,7 @@ int main(int argc, char* argv[]) {
     int optcost = soln->fx;
     finalize();
     double duration = (double) (clock() - start_time)/CLOCKS_PER_SEC;
-    printf("%f\n", 100*duration);
+    printf("%d, %f\n", optcost, 100*duration);
     return 0;
 }
 

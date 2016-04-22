@@ -22,37 +22,52 @@
  Iterative algorithms
  *******************/
 
-solution_t* cpy;
-best_t* best;
-
-void finalizeIterative() {
-    free((void*) cpy);
-    free((void*) best);
+void allocCopy(instance_t* inst, solution_t* cpy) {
+    cpy->x = mymalloc(inst->n * sizeof(int));
+    cpy->y = mymalloc(inst->m * sizeof(int));
+    cpy->col_cover = mymalloc(inst->m * sizeof(int*));
+    cpy->ncol_cover = mymalloc(inst->m * sizeof(int));
+    for (int i = 0; i < inst->m; i++) {
+        cpy->col_cover[i] = mymalloc(inst->ncol[i] * sizeof(int));
+    }
 }
 
-/***
- Initialize the copy of the solution struct
- **/
-void initCopy(instance_t* inst, solution_t* sol, solution_t* new) {
-    new->fx = sol->fx;
-    new->un_rows = sol->un_rows;
-    new->un_cols = sol->un_cols;
-    new->x = (int*) mymalloc(inst->n * sizeof(int));
-    new->y = (int*) mymalloc(inst->m * sizeof(int));
-    new->col_cover = (int**) mymalloc(inst->m * sizeof(int*));
-    new->ncol_cover = (int*) mymalloc(inst->m * sizeof(int));
-    for (int i = 0; i < inst->n; i++) {
-        new->x[i] = sol->x[i];
-    }
+void allocBest(instance_t* inst, best_t* best) {
+    best->added = mymalloc(inst->n * sizeof(int));
+}
+
+void initCopy(instance_t* inst, solution_t* sol, solution_t* cpy) {
+    cpy->fx = sol->fx;
+    cpy->un_rows = sol->un_rows;
+    cpy->un_cols = sol->un_cols;
+    for (int i = 0; i < inst->n; i++) cpy->x[i] = sol->x[i];
     for (int i = 0; i < inst->m; i++) {
-        new->y[i] = sol->y[i];
-        new->ncol_cover[i] = sol->ncol_cover[i];
+        cpy->y[i] = sol->y[i];
+        cpy->ncol_cover[i] = sol->ncol_cover[i];
         int k = inst->ncol[i];
-        new->col_cover[i] = (int*) mymalloc(k * sizeof(int));
         for (int j = 0; j < k; j++) {
-            new->col_cover[i][j] = sol->col_cover[i][j];
+            cpy->col_cover[i][j] = sol->col_cover[i][j];
         }
     }
+
+}
+
+void initBest(solution_t* sol, best_t* best) {
+    best->removed = -1;
+    best->addedPtr = 0;
+    best->fx = sol->fx;
+}
+
+void freeCopy(instance_t* inst, solution_t* cpy) {
+    for (int i = 0; i < inst->m; i++) free(cpy->col_cover[i]);
+    free(cpy->col_cover);
+    free(cpy->ncol_cover);
+    free(cpy->x);
+    free(cpy->y);
+}
+
+void freeBest(best_t* best) {
+    free(best->added);
 }
 
 /***
@@ -75,16 +90,6 @@ void copySolution(instance_t* inst, solution_t* from, solution_t* to) {
 }
 
 /***
- Free a solution struct
- **/
-void freeSolution(solution_t* sol) {
-    free((void*) sol->x);
-    free((void*) sol->y);
-    free((void**) sol->col_cover);
-    free((void*) sol->ncol_cover);
-}
-
-/***
  Add the best possible set to the solution as long as
  1. it is not colidx, the set that was just removed
  2. it is not already used
@@ -92,7 +97,7 @@ void freeSolution(solution_t* sol) {
  The best set is determined by the adaptive cover
  cost-based greedy heuristic.
  **/
-int replaceSet(instance_t* inst, int colidx) {
+int replaceSet(instance_t* inst, solution_t* cpy, int colidx) {
     int currCol = -1;
     float currCost = 0.0;
     for (int i = 0; i < inst->n; i++) {
@@ -110,13 +115,6 @@ int replaceSet(instance_t* inst, int colidx) {
     return currCol;
 }
 
-void initBest(instance_t* inst, solution_t* sol, best_t* best) {
-    best->removed = -1;
-    best->added = (int*) mymalloc(inst->n * sizeof(int));
-    best->addedPtr = 0;
-    best->fx = sol->fx;
-}
-
 void applyBest(instance_t* inst, solution_t* sol, best_t* best) {
     for (int i = 0; i < best->addedPtr; i++) {
         addSet(inst, sol, best->added[i]);
@@ -129,10 +127,12 @@ void bestImprove(instance_t* inst, solution_t* sol) {
     int* added = mymalloc(inst->n * sizeof(int));
     int addedPtr = 0;
     
-    cpy = (solution_t*) mymalloc(sizeof(solution_t));
-    best = (best_t*) mymalloc(sizeof(best_t));
-    initCopy(inst, sol, cpy);
-    initBest(inst, sol, best);
+    solution_t* cpy = mymalloc(sizeof(solution_t));
+    best_t* best = mymalloc(sizeof(best_t));
+    allocCopy(inst, cpy);
+    allocBest(inst, best);
+    copySolution(inst, sol, cpy);
+    initBest(sol, best);
     
     while (improvement) {
         improvement = 0;
@@ -140,7 +140,7 @@ void bestImprove(instance_t* inst, solution_t* sol) {
             if (cpy->x[i]) {
                 removeSet(inst, cpy, i);
                 while (!isSolution(cpy)) {
-                    int col = replaceSet(inst, i);
+                    int col = replaceSet(inst, cpy, i);
                     if (col >= 0) {
                         added[addedPtr] = col;
                         addedPtr += 1;
@@ -172,19 +172,26 @@ void bestImprove(instance_t* inst, solution_t* sol) {
             best->addedPtr = 0;
         }
     }
+    freeCopy(inst, cpy);
+    freeBest(best);
+    free(cpy);
+    free(best);
+    free(added);
 }
 
 void firstImprove(instance_t* inst, solution_t* sol) {
     int improvement = 1;
-    cpy = (solution_t*) mymalloc(sizeof(solution_t));
-    initCopy(inst, sol, cpy);
+    solution_t* cpy = mymalloc(sizeof(solution_t));
+    allocCopy(inst, cpy);
+    copySolution(inst, sol, cpy);
+    
     while (improvement) {
         improvement = 0;
         for (int i = 0; i < inst->n; i++) {
             if (cpy->x[i]) {
                 removeSet(inst, cpy, i);
                 while (!isSolution(cpy)) {
-                    replaceSet(inst, i);
+                    replaceSet(inst, cpy, i);
                 }
                 if (cpy->fx < sol->fx) {
                     copySolution(inst, cpy, sol);
@@ -198,4 +205,6 @@ void firstImprove(instance_t* inst, solution_t* sol) {
             }
         }
     }
+    freeCopy(inst, cpy);
+    free(cpy);
 }

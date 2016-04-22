@@ -33,6 +33,7 @@ char* output_file = "output.txt";
 
 instance_t* inst;
 solution_t* soln;
+clock_t start_time;
 
 int ch1 = 0, ch2 = 0, ch3 = 0, ch4 = 0, bi = 0, fi = 0, re = 0;
 
@@ -200,9 +201,22 @@ void errorExit(char* text) {
 
 /*** Use this function to finalize execution **/
 void finalize() {
-    free((void*) inst);
-    free((void*) soln);
-    finalizeIterative();
+    for (int i = 0; i < inst->n; i++) free(inst->row[i]);
+    for (int i = 0; i < inst->m; i++) free(inst->col[i]);
+    free(inst->row);
+    free(inst->col);
+    free(inst->ccost);
+    free(inst->cost);
+    free(inst->ncol);
+    free(inst->nrow);
+    free(inst);
+    
+    //for (int i = 0; i < inst->m; i++) free(soln->col_cover[i]);
+    free(soln->col_cover);
+    free(soln->ncol_cover);
+    free(soln->x);
+    free(soln->y);
+    free(soln);
 }
 
 /*** Prints diagnostic information about the solution **/
@@ -243,7 +257,7 @@ void eliminate(instance_t* inst, solution_t* sol) {
     unsigned int redundantBool = 1;
     unsigned int improvement = 1;
     
-    int* cols = (int*) mymalloc(inst->n * sizeof(int));
+    int* cols = mymalloc(inst->n * sizeof(int));
     for (int i = 0; i < inst->n; i++) {
         cols[i] = i;
     }
@@ -269,6 +283,7 @@ void eliminate(instance_t* inst, solution_t* sol) {
             }
         }
     }
+    free(cols);
 }
 
 /*** Dispatcher */
@@ -293,13 +308,16 @@ void solve() {
 
 /*** Main **/
 int main(int argc, char* argv[]) {
+    start_time = clock();
     readParameters(argc, argv);
     readSCP(instance_file);
     initialize();
     srand(seed);
     solve();
-    printf("%d\n", soln->fx);
+    int optcost = soln->fx;
     finalize();
+    double duration = (double) (clock() - start_time)/CLOCKS_PER_SEC;
+    printf("%f\n", 100*duration);
     return 0;
 }
 

@@ -12,12 +12,17 @@
 #include "data.h"
 
 // Improvement functions
-void finalizeIterative();
-void initCopy(instance_t* inst, solution_t* sol, solution_t* new);
+void allocCopy(instance_t* inst, solution_t* cpy);
+void allocBest(instance_t* inst, best_t* best);
+
+void initCopy(instance_t* inst, solution_t* sol, solution_t* cpy);
+void initBest(solution_t* sol, best_t* best);
+
+void freeCopy(instance_t* inst, solution_t* cpy);
+void freeBest(best_t* best);
+
 void copySolution(instance_t* inst, solution_t* from, solution_t* to);
-void freeSolution(solution_t* sol);
-int replaceSet(instance_t* inst, int colidx);
-void initBest(instance_t* inst, solution_t* sol, best_t* best);
+int replaceSet(instance_t* inst, solution_t* cpy, int colidx);
 void applyBest(instance_t* inst, solution_t* sol, best_t* best);
 void bestImprove(instance_t* inst, solution_t* sol);
 void firstImprove(instance_t* inst, solution_t* sol);
